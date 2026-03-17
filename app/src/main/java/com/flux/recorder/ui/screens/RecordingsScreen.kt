@@ -27,19 +27,15 @@ fun RecordingsScreen(
     onShareRecording: (File) -> Unit,
     onPlayRecording: (File) -> Unit
 ) {
-    val scrollBehavior = MiuixScrollBehavior()
-
     Scaffold(
         topBar = {
-            TopAppBar(
+            SmallTopAppBar(
                 title = stringResource(R.string.recordings),
-                largeTitle = stringResource(R.string.recordings),
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(MiuixIcons.Back, contentDescription = stringResource(R.string.cd_back))
                     }
-                },
-                scrollBehavior = scrollBehavior
+                }
             )
         }
     ) { padding ->
@@ -85,7 +81,6 @@ fun RecordingCard(
     onPlay: () -> Unit
 ) {
     Card(
-        onClick = onPlay,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
