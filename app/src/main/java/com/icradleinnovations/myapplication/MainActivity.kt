@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.ui.NavDisplay
 import com.flux.recorder.R
 import com.flux.recorder.data.RecordingSettings
 import com.flux.recorder.data.RecordingState
@@ -206,6 +208,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+sealed interface Screen {
+    data object Home : Screen
+    data object Settings : Screen
+    data object Recordings : Screen
+}
+
 @Composable
 fun FluxRecorderApp(
     preferencesManager: PreferencesManager,
@@ -219,50 +227,52 @@ fun FluxRecorderApp(
     onShareRecording: (File) -> Unit,
     autoStartRecording: Boolean = false
 ) {
-    var currentScreen by remember { mutableStateOf("home") }
     var settings by remember { mutableStateOf(preferencesManager.getRecordingSettings()) }
     var recordings by remember { mutableStateOf(fileManager.getAllRecordings()) }
-    
-    when (currentScreen) {
-        "home" -> {
-            HomeScreen(
-                recordingState = recordingState,
-                settings = settings,
-                onStartRecording = { resultCode, data ->
-                    onStartRecording(resultCode, data, settings)
-                },
-                onStopRecording = onStopRecording,
-                onPauseRecording = onPauseRecording,
-                onResumeRecording = onResumeRecording,
-                onNavigateToSettings = { currentScreen = "settings" },
-                onNavigateToRecordings = {
-                    recordings = fileManager.getAllRecordings()
-                    currentScreen = "recordings"
-                },
-                autoStartRecording = autoStartRecording
-            )
+
+    val backStack = remember { mutableStateListOf<Screen>(Screen.Home) }
+
+    NavDisplay(
+        backStack = backStack,
+        entryProvider = { key ->
+            NavEntry(key) {
+                when (key) {
+                    Screen.Home -> HomeScreen(
+                        recordingState = recordingState,
+                        settings = settings,
+                        onStartRecording = { resultCode, data ->
+                            onStartRecording(resultCode, data, settings)
+                        },
+                        onStopRecording = onStopRecording,
+                        onPauseRecording = onPauseRecording,
+                        onResumeRecording = onResumeRecording,
+                        onNavigateToSettings = { backStack.add(Screen.Settings) },
+                        onNavigateToRecordings = {
+                            recordings = fileManager.getAllRecordings()
+                            backStack.add(Screen.Recordings)
+                        },
+                        autoStartRecording = autoStartRecording
+                    )
+                    Screen.Settings -> SettingsScreen(
+                        settings = settings,
+                        onSettingsChanged = { newSettings ->
+                            settings = newSettings
+                            preferencesManager.saveRecordingSettings(newSettings)
+                        },
+                        onNavigateBack = { backStack.removeLastOrNull() }
+                    )
+                    Screen.Recordings -> RecordingsScreen(
+                        recordings = recordings,
+                        onNavigateBack = { backStack.removeLastOrNull() },
+                        onDeleteRecording = { file ->
+                            fileManager.deleteRecording(file)
+                            recordings = fileManager.getAllRecordings()
+                        },
+                        onShareRecording = onShareRecording,
+                        onPlayRecording = onPlayRecording
+                    )
+                }
+            }
         }
-        "settings" -> {
-            SettingsScreen(
-                settings = settings,
-                onSettingsChanged = { newSettings ->
-                    settings = newSettings
-                    preferencesManager.saveRecordingSettings(newSettings)
-                },
-                onNavigateBack = { currentScreen = "home" }
-            )
-        }
-        "recordings" -> {
-            RecordingsScreen(
-                recordings = recordings,
-                onNavigateBack = { currentScreen = "home" },
-                onDeleteRecording = { file ->
-                    fileManager.deleteRecording(file)
-                    recordings = fileManager.getAllRecordings()
-                },
-                onShareRecording = onShareRecording,
-                onPlayRecording = onPlayRecording
-            )
-        }
-    }
+    )
 }

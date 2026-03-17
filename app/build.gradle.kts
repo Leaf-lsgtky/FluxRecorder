@@ -92,8 +92,9 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     
-    // Navigation
-    implementation(libs.androidx.navigation.compose)
+    // Navigation3
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.miuix.navigation3.ui)
     
     // CameraX for Facecam
     implementation(libs.androidx.camera.core)

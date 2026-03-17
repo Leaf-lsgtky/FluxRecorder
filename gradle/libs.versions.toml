@@ -11,7 +11,7 @@ activityCompose = "1.13.0"
 composeBom = "2024.12.01"
 hilt = "2.59.2"
 hiltNavigationCompose = "1.2.0"
-navigationCompose = "2.8.5"
+navigation3 = "1.0.1"
 cameraX = "1.4.1"
 exoplayer = "1.5.0"
 accompanist = "0.36.0"
@@ -46,8 +46,9 @@ hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 
-# Navigation
-androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+# Navigation3
+androidx-navigation3-runtime = { group = "androidx.navigation3", name = "navigation3-runtime", version.ref = "navigation3" }
+miuix-navigation3-ui = { group = "top.yukonga.miuix.kmp", name = "miuix-navigation3-ui-android", version.ref = "miuix" }
 
 # CameraX for Facecam
 androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "cameraX" }
