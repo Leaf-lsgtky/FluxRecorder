@@ -101,9 +101,12 @@ class RecorderService : Service() {
             Log.w(TAG, "Recording already in progress")
             return
         }
-        
+
+        // Show processing state immediately for responsive UI
+        _recordingState.value = RecordingState.Processing(0)
+
         try {
-            // Start foreground service
+            // Start foreground service (must happen on main thread)
             val notification = notificationHelper.createRecordingNotification(
                 getString(R.string.notification_recording_title),
                 getString(R.string.notification_recording_message)
@@ -117,125 +120,144 @@ class RecorderService : Service() {
             } else {
                 startForeground(NotificationHelper.NOTIFICATION_ID, notification)
             }
-            
-            // Initialize MediaProjection
+
+            // Initialize MediaProjection (must happen on main thread before API calls)
             if (!screenCaptureManager.initializeProjection(resultCode, data)) {
                 _recordingState.value = RecordingState.Error(getString(R.string.error_screen_capture))
                 stopSelf()
                 return
             }
-            
-            // Create output file
-            outputFile = fileManager.createRecordingFile()
-            
-            // Calculate dimensions based on device screen and quality tier
-            val (screenWidth, screenHeight) = screenCaptureManager.getScreenDimensions()
-            val (width, height) = settings.videoQuality.computeDimensions(screenWidth, screenHeight)
 
-            // Initialize encoder
-            val bitrate = settings.calculateBitrate(width, height)
-            videoEncoder = VideoEncoder(
-                width,
-                height,
-                bitrate,
-                settings.frameRate.fps
-            )
-            
-            val surface = videoEncoder?.prepare()
-            if (surface == null) {
-                _recordingState.value = RecordingState.Error(getString(R.string.error_encoder))
-                stopSelf()
-                return
-            }
-            
-            // Create virtual display
-            val virtualDisplay = screenCaptureManager.createVirtualDisplay(
-                surface,
-                width,
-                height,
-                screenCaptureManager.getScreenDensity()
-            )
-            
-            if (virtualDisplay == null) {
-                _recordingState.value = RecordingState.Error(getString(R.string.error_virtual_display))
-                stopSelf()
-                return
-            }
-            
-            // Setup Audio Encoder & Recorder
-            var audioEnabled = false
-            Log.d(TAG, "Audio Source Setting: ${settings.audioSource}")
-            
-            if (settings.audioSource != AudioSource.NONE) {
-                Log.d(TAG, "Initializing audio encoder and recorder...")
-                audioEncoder = AudioEncoder() // Default settings
-                audioEncoder?.prepare()
-                
-                audioRecorder = AudioRecorder()
-                
-                // Start audio recording with the specified source
-                val success = audioRecorder?.start(
-                    screenCaptureManager.getMediaProjection(), 
-                    settings.audioSource
-                ) ?: false
-                
-                if (success) {
-                    audioEnabled = true
-                    Log.d(TAG, "✅ Audio recording enabled: ${settings.audioSource}")
-                } else {
-                    Log.e(TAG, "❌ Failed to start audio recorder for source: ${settings.audioSource}")
-                    audioEncoder?.release()
-                    audioEncoder = null
-                }
-            } else {
-                Log.w(TAG, "⚠️ Audio source is NONE - no audio will be recorded")
-            }
-            
-            // Initialize muxer
-            muxer = MediaMuxerWrapper(outputFile!!).apply {
-                prepare()
-                setAudioExpected(audioEnabled)
-            }
-            
-            // Start recording loop
-            startTime = System.currentTimeMillis()
-            _recordingState.value = RecordingState.Recording(0)
-            
-            recordingJob = serviceScope.launch {
-                recordingLoop()
-            }
-            
-            if (audioEnabled) {
-                audioJob = serviceScope.launch(Dispatchers.IO) {
-                    audioLoop()
-                }
-            }
-            
-            Log.d(TAG, "Recording started")
-            
-            // Start facecam if enabled
-            if (settings.enableFacecam) {
-                val facecamIntent = Intent(this, FloatingControlService::class.java)
-                startService(facecamIntent)
-            }
-            
-            // Start shake detector if enabled
-            if (settings.enableShakeToStop) {
-                shakeDetector = ShakeDetector(
-                    context = this,
-                    sensitivity = settings.shakeSensitivity
-                ) {
-                    Log.d(TAG, "Shake detected - stopping recording")
-                    stopRecording()
-                }
-                shakeDetector?.start()
-                Log.d(TAG, "Shake-to-stop enabled with sensitivity: ${settings.shakeSensitivity}")
-            }
-            
         } catch (e: Exception) {
-            Log.e(TAG, "Error starting recording", e)
+            Log.e(TAG, "Error starting foreground/projection", e)
             _recordingState.value = RecordingState.Error(e.message ?: "Unknown error")
             stopSelf()
+            return
+        }
+
+        // Heavy initialization in background
+        serviceScope.launch(Dispatchers.Default) {
+            try {
+                // Create output file
+                outputFile = fileManager.createRecordingFile()
+
+                // Calculate dimensions based on device screen and quality tier
+                val (screenWidth, screenHeight) = screenCaptureManager.getScreenDimensions()
+                val (width, height) = settings.videoQuality.computeDimensions(screenWidth, screenHeight)
+
+                // Initialize encoder
+                val bitrate = settings.calculateBitrate(width, height)
+                videoEncoder = VideoEncoder(
+                    width,
+                    height,
+                    bitrate,
+                    settings.frameRate.fps
+                )
+
+                val surface = videoEncoder?.prepare()
+                if (surface == null) {
+                    withContext(Dispatchers.Main) {
+                        _recordingState.value = RecordingState.Error(getString(R.string.error_encoder))
+                        stopSelf()
+                    }
+                    return@launch
+                }
+
+                // Create virtual display
+                val virtualDisplay = screenCaptureManager.createVirtualDisplay(
+                    surface,
+                    width,
+                    height,
+                    screenCaptureManager.getScreenDensity()
+                )
+
+                if (virtualDisplay == null) {
+                    withContext(Dispatchers.Main) {
+                        _recordingState.value = RecordingState.Error(getString(R.string.error_virtual_display))
+                        stopSelf()
+                    }
+                    return@launch
+                }
+
+                // Setup Audio Encoder & Recorder
+                var audioEnabled = false
+                Log.d(TAG, "Audio Source Setting: ${settings.audioSource}")
+
+                if (settings.audioSource != AudioSource.NONE) {
+                    Log.d(TAG, "Initializing audio encoder and recorder...")
+                    audioEncoder = AudioEncoder() // Default settings
+                    audioEncoder?.prepare()
+
+                    audioRecorder = AudioRecorder()
+
+                    // Start audio recording with the specified source
+                    val success = audioRecorder?.start(
+                        screenCaptureManager.getMediaProjection(),
+                        settings.audioSource
+                    ) ?: false
+
+                    if (success) {
+                        audioEnabled = true
+                        Log.d(TAG, "Audio recording enabled: ${settings.audioSource}")
+                    } else {
+                        Log.e(TAG, "Failed to start audio recorder for source: ${settings.audioSource}")
+                        audioEncoder?.release()
+                        audioEncoder = null
+                    }
+                } else {
+                    Log.w(TAG, "Audio source is NONE - no audio will be recorded")
+                }
+
+                // Initialize muxer
+                muxer = MediaMuxerWrapper(outputFile!!).apply {
+                    prepare()
+                    setAudioExpected(audioEnabled)
+                }
+
+                // Start recording loop
+                startTime = System.currentTimeMillis()
+                _recordingState.value = RecordingState.Recording(0)
+
+                recordingJob = serviceScope.launch {
+                    recordingLoop()
+                }
+
+                if (audioEnabled) {
+                    audioJob = serviceScope.launch(Dispatchers.IO) {
+                        audioLoop()
+                    }
+                }
+
+                Log.d(TAG, "Recording started")
+
+                // Start facecam if enabled
+                if (settings.enableFacecam) {
+                    withContext(Dispatchers.Main) {
+                        val facecamIntent = Intent(this@RecorderService, FloatingControlService::class.java)
+                        startService(facecamIntent)
+                    }
+                }
+
+                // Start shake detector if enabled
+                if (settings.enableShakeToStop) {
+                    withContext(Dispatchers.Main) {
+                        shakeDetector = ShakeDetector(
+                            context = this@RecorderService,
+                            sensitivity = settings.shakeSensitivity
+                        ) {
+                            Log.d(TAG, "Shake detected - stopping recording")
+                            stopRecording()
+                        }
+                        shakeDetector?.start()
+                        Log.d(TAG, "Shake-to-stop enabled with sensitivity: ${settings.shakeSensitivity}")
+                    }
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error starting recording", e)
+                _recordingState.value = RecordingState.Error(e.message ?: "Unknown error")
+                withContext(Dispatchers.Main) { stopSelf() }
+            }
         }
     }
     
@@ -382,93 +404,104 @@ class RecorderService : Service() {
     }
     
     private fun stopRecording() {
+        if (_recordingState.value is RecordingState.Idle) return
         Log.d(TAG, "Stopping recording")
-        
+
+        // Update state immediately for responsive UI
+        _recordingState.value = RecordingState.Idle
+
         // Cancel recording jobs
         recordingJob?.cancel()
         recordingJob = null
-        
+
         audioJob?.cancel()
         audioJob = null
-        
-        // Signal end of stream
-        videoEncoder?.signalEndOfStream()
-        
-        // Small delay to ensure last frames are written
-        Thread.sleep(100)
-        
-        // Release resources
-        muxer?.release()
-        muxer = null
-        
-        videoEncoder?.release()
-        videoEncoder = null
-        
-        audioRecorder?.stop()
-        audioRecorder = null
-        
-        audioEncoder?.release()
-        audioEncoder = null
-                // Stop shake detector
+
+        // Stop shake detector
         shakeDetector?.stop()
         shakeDetector = null
-                screenCaptureManager.stop()
-        
-        // Make sure file is visible in gallery
-        outputFile?.let { file ->
-            // First, scan the original private file (just in case)
-            android.media.MediaScannerConnection.scanFile(
-                this,
-                arrayOf(file.absolutePath),
-                arrayOf("video/mp4"),
-                null
-            )
-            
-            // Now copy to public "Movies/FluxRecorder" directory
-            val publicFile = fileManager.copyToPublicGallery(file)
-            
-            // If we got a public file (legacy storage), scan that too
-            if (publicFile != null) {
-                android.media.MediaScannerConnection.scanFile(
-                    this,
-                    arrayOf(publicFile.absolutePath),
-                    arrayOf("video/mp4"),
-                    null
-                )
-                Log.d(TAG, "Copied and scanned public file: ${publicFile.absolutePath}")
-            } else {
-                Log.d(TAG, "Copied to MediaStore (Scoped Storage)")
-            }
-            
-            // Delete the private file to avoid duplicates
-            try {
-                if (file.exists()) {
-                    val deleted = file.delete()
-                    Log.d(TAG, "Deleted private original file: $deleted")
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to delete private file", e)
-            }
-        }
-        
+
         // Stop facecam if running
         val facecamIntent = Intent(this, FloatingControlService::class.java)
         stopService(facecamIntent)
-        
-        // Update state
-        _recordingState.value = RecordingState.Idle
-        
-        // Stop foreground and service
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
-        
-        Log.d(TAG, "Recording stopped, file saved: ${outputFile?.absolutePath}")
+
+        // Heavy cleanup in background
+        val currentVideoEncoder = videoEncoder
+        val currentAudioEncoder = audioEncoder
+        val currentAudioRecorder = audioRecorder
+        val currentMuxer = muxer
+        val currentOutputFile = outputFile
+
+        videoEncoder = null
+        audioEncoder = null
+        audioRecorder = null
+        muxer = null
+
+        serviceScope.launch(Dispatchers.IO) {
+            try {
+                // Signal end of stream
+                currentVideoEncoder?.signalEndOfStream()
+                delay(100) // Ensure last frames are written
+
+                // Release resources
+                currentMuxer?.release()
+                currentVideoEncoder?.release()
+                currentAudioRecorder?.stop()
+                currentAudioEncoder?.release()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error releasing resources", e)
+            }
+
+            screenCaptureManager.stop()
+
+            // Make sure file is visible in gallery
+            currentOutputFile?.let { file ->
+                android.media.MediaScannerConnection.scanFile(
+                    this@RecorderService,
+                    arrayOf(file.absolutePath),
+                    arrayOf("video/mp4"),
+                    null
+                )
+
+                val publicFile = fileManager.copyToPublicGallery(file)
+
+                if (publicFile != null) {
+                    android.media.MediaScannerConnection.scanFile(
+                        this@RecorderService,
+                        arrayOf(publicFile.absolutePath),
+                        arrayOf("video/mp4"),
+                        null
+                    )
+                    Log.d(TAG, "Copied and scanned public file: ${publicFile.absolutePath}")
+                } else {
+                    Log.d(TAG, "Copied to MediaStore (Scoped Storage)")
+                }
+
+                try {
+                    if (file.exists()) {
+                        val deleted = file.delete()
+                        Log.d(TAG, "Deleted private original file: $deleted")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to delete private file", e)
+                }
+            }
+
+            withContext(Dispatchers.Main) {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+            }
+
+            Log.d(TAG, "Recording stopped, file saved: ${currentOutputFile?.absolutePath}")
+        }
     }
     
     override fun onDestroy() {
         super.onDestroy()
+        if (_recordingState.value !is RecordingState.Idle) {
+            stopRecording()
+        }
         serviceScope.cancel()
-        stopRecording()
         Log.d(TAG, "RecorderService destroyed")
     }
     
