@@ -106,10 +106,7 @@ class RecorderService : Service() {
 
         try {
             // Start foreground service (must happen on main thread)
-            val notification = notificationHelper.createRecordingNotification(
-                getString(R.string.notification_recording_title),
-                getString(R.string.notification_recording_message)
-            )
+            val notification = notificationHelper.createRecordingNotification(0L)
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                 var foregroundServiceType = android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
@@ -246,12 +243,13 @@ class RecorderService : Service() {
     
     private suspend fun recordingLoop() {
         var videoTrackAdded = false
-        
+        var lastNotificationUpdate = 0L
+
         while (coroutineContext.isActive && _recordingState.value is RecordingState.Recording) {
             try {
                 // Get encoded video data
                 val output = videoEncoder?.getEncodedData() ?: VideoEncoder.EncoderOutput.TryAgain
-                
+
                 when (output) {
                     is VideoEncoder.EncoderOutput.FormatChanged -> {
                         Log.d(TAG, "Encoder format changed")
@@ -264,24 +262,32 @@ class RecorderService : Service() {
                     }
                     is VideoEncoder.EncoderOutput.Data -> {
                         val (buffer, bufferInfo, bufferIndex) = output
-                        
+
                         if (videoTrackAdded && (bufferInfo.flags and android.media.MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == 0) {
                             muxer?.writeVideoSample(buffer, bufferInfo)
                         }
-                        
+
                         videoEncoder?.releaseOutputBuffer(bufferIndex)
                     }
                     is VideoEncoder.EncoderOutput.TryAgain -> {
                         // No data available yet, just continue
                     }
                 }
-                
+
                 // Update duration
                 val currentDuration = System.currentTimeMillis() - startTime - pausedDuration
                 _recordingState.value = RecordingState.Recording(currentDuration)
-                
+
+                // Update notification every second
+                val currentSecond = currentDuration / 1000
+                if (currentSecond != lastNotificationUpdate) {
+                    lastNotificationUpdate = currentSecond
+                    val notification = notificationHelper.createRecordingNotification(currentDuration)
+                    notificationHelper.updateNotification(notification)
+                }
+
                 delay(10) // Small delay to prevent busy waiting
-                
+
             } catch (e: Exception) {
                 Log.e(TAG, "Error in recording loop", e)
                 break
@@ -362,26 +368,21 @@ class RecorderService : Service() {
         if (currentState is RecordingState.Recording) {
             pauseStartTime = System.currentTimeMillis()
             _recordingState.value = RecordingState.Paused(currentState.durationMs)
-            
+
             val notification = notificationHelper.createRecordingNotification(
-                getString(R.string.notification_paused_title),
-                getString(R.string.notification_paused_message),
-                isRecording = false
+                currentState.durationMs, isPaused = true
             )
             notificationHelper.updateNotification(notification)
         }
     }
-    
+
     private fun resumeRecording() {
         val currentState = _recordingState.value
         if (currentState is RecordingState.Paused) {
             pausedDuration += System.currentTimeMillis() - pauseStartTime
             _recordingState.value = RecordingState.Recording(currentState.durationMs)
-            
-            val notification = notificationHelper.createRecordingNotification(
-                getString(R.string.notification_recording_title),
-                getString(R.string.notification_recording_message)
-            )
+
+            val notification = notificationHelper.createRecordingNotification(currentState.durationMs)
             notificationHelper.updateNotification(notification)
         }
     }

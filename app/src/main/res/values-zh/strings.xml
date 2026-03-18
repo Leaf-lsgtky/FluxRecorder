@@ -107,9 +107,9 @@
     <!-- Notifications -->
     <string name="notification_channel_name">录制服务</string>
     <string name="notification_channel_desc">显示录制状态</string>
-    <string name="notification_recording_title">录制中</string>
+    <string name="notification_recording_title">正在录制 · %s</string>
     <string name="notification_recording_message">正在录制屏幕…</string>
-    <string name="notification_paused_title">录制已暂停</string>
+    <string name="notification_paused_title">已暂停 · %s</string>
     <string name="notification_paused_message">点击继续</string>
     <string name="notification_processing">正在处理视频…</string>
 
