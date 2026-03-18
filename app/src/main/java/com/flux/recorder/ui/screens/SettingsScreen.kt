@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -40,10 +41,14 @@ fun SettingsScreen(
         Pair(metrics.widthPixels, metrics.heightPixels)
     }
 
+    val scrollBehavior = MiuixScrollBehavior(rememberTopAppBarState())
+
     Scaffold(
         topBar = {
-            SmallTopAppBar(
+            TopAppBar(
                 title = stringResource(R.string.settings),
+                largeTitle = stringResource(R.string.settings),
+                scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(MiuixIcons.Back, contentDescription = stringResource(R.string.cd_back))
@@ -56,6 +61,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .overScrollVertical()
                 .verticalScroll(rememberScrollState())
                 .padding(vertical = 12.dp)

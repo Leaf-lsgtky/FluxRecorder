@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,10 +29,14 @@ fun RecordingsScreen(
     onShareRecording: (File) -> Unit,
     onPlayRecording: (File) -> Unit
 ) {
+    val scrollBehavior = MiuixScrollBehavior(rememberTopAppBarState())
+
     Scaffold(
         topBar = {
-            SmallTopAppBar(
+            TopAppBar(
                 title = stringResource(R.string.recordings),
+                largeTitle = stringResource(R.string.recordings),
+                scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(MiuixIcons.Back, contentDescription = stringResource(R.string.cd_back))
@@ -58,6 +63,7 @@ fun RecordingsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
                     .overScrollVertical(),
                 overscrollEffect = null,
                 contentPadding = PaddingValues(12.dp),
