@@ -1,6 +1,7 @@
 package com.flux.recorder
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -40,6 +41,10 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Compat Navigation Bar color for Xiaomi Devices
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
 
         // Check if launched from Quick Settings Tile
         val shouldStartRecording = intent?.action == QuickTileService.ACTION_TOGGLE_RECORDING
