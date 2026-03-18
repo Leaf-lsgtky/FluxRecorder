@@ -17,7 +17,8 @@ class VideoEncoder(
     private val frameRate: Int
 ) {
     private var mediaCodec: MediaCodec? = null
-    private var inputSurface: Surface? = null
+    var inputSurface: Surface? = null
+        private set
     
     companion object {
         private const val TAG = "VideoEncoder"

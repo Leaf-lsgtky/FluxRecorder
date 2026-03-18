@@ -392,6 +392,7 @@ class RecorderService : Service() {
         val currentState = _recordingState.value
         if (currentState is RecordingState.Recording) {
             pauseStartTime = System.currentTimeMillis()
+            screenCaptureManager.pause()
             _recordingState.value = RecordingState.Paused(currentState.durationMs)
 
             val notification = notificationHelper.createRecordingNotification(
@@ -405,6 +406,10 @@ class RecorderService : Service() {
         val currentState = _recordingState.value
         if (currentState is RecordingState.Paused) {
             pausedDuration += System.currentTimeMillis() - pauseStartTime
+            val surface = videoEncoder?.inputSurface
+            if (surface != null) {
+                screenCaptureManager.resume(surface)
+            }
             _recordingState.value = RecordingState.Recording(currentState.durationMs)
 
             val notification = notificationHelper.createRecordingNotification(currentState.durationMs)

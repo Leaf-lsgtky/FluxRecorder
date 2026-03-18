@@ -103,6 +103,20 @@ class ScreenCaptureManager(private val context: Context) {
     }
     
     /**
+     * Pause screen capture by disconnecting the surface
+     */
+    fun pause() {
+        virtualDisplay?.surface = null
+    }
+
+    /**
+     * Resume screen capture by reconnecting the surface
+     */
+    fun resume(surface: Surface) {
+        virtualDisplay?.surface = surface
+    }
+
+    /**
      * Stop screen capture and release resources
      */
     fun stop() {
