@@ -14,7 +14,6 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.flux.recorder.R
 import com.flux.recorder.data.RecordingSettings
-import com.flux.recorder.data.RecordingState
 import com.flux.recorder.service.RecorderService
 import com.flux.recorder.service.QuickTileService
 import com.flux.recorder.ui.screens.HomeScreen
@@ -52,9 +51,6 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Collect recording state directly from companion object — no binding needed
-                    val recordingState by RecorderService.recordingState.collectAsState()
-
                     FluxRecorderApp(
                         preferencesManager = preferencesManager,
                         fileManager = fileManager,
@@ -71,7 +67,6 @@ class MainActivity : ComponentActivity() {
                         onResumeRecording = {
                             resumeRecordingService()
                         },
-                        recordingState = recordingState,
                         onPlayRecording = { file ->
                             playRecording(file)
                         },
@@ -171,7 +166,6 @@ fun FluxRecorderApp(
     onStopRecording: () -> Unit,
     onPauseRecording: () -> Unit,
     onResumeRecording: () -> Unit,
-    recordingState: RecordingState,
     onPlayRecording: (File) -> Unit,
     onShareRecording: (File) -> Unit,
     autoStartRecording: Boolean = false
@@ -186,22 +180,26 @@ fun FluxRecorderApp(
         entryProvider = { key ->
             NavEntry(key) {
                 when (key) {
-                    Screen.Home -> HomeScreen(
-                        recordingState = recordingState,
-                        settings = settings,
-                        onStartRecording = { resultCode, data ->
-                            onStartRecording(resultCode, data, settings)
-                        },
-                        onStopRecording = onStopRecording,
-                        onPauseRecording = onPauseRecording,
-                        onResumeRecording = onResumeRecording,
-                        onNavigateToSettings = { backStack.add(Screen.Settings) },
-                        onNavigateToRecordings = {
-                            recordings = fileManager.getAllRecordings()
-                            backStack.add(Screen.Recordings)
-                        },
-                        autoStartRecording = autoStartRecording
-                    )
+                    Screen.Home -> {
+                        // Collect state INSIDE NavEntry so recomposition is triggered here
+                        val recordingState by RecorderService.recordingState.collectAsState()
+                        HomeScreen(
+                            recordingState = recordingState,
+                            settings = settings,
+                            onStartRecording = { resultCode, data ->
+                                onStartRecording(resultCode, data, settings)
+                            },
+                            onStopRecording = onStopRecording,
+                            onPauseRecording = onPauseRecording,
+                            onResumeRecording = onResumeRecording,
+                            onNavigateToSettings = { backStack.add(Screen.Settings) },
+                            onNavigateToRecordings = {
+                                recordings = fileManager.getAllRecordings()
+                                backStack.add(Screen.Recordings)
+                            },
+                            autoStartRecording = autoStartRecording
+                        )
+                    }
                     Screen.Settings -> SettingsScreen(
                         settings = settings,
                         onSettingsChanged = { newSettings ->
