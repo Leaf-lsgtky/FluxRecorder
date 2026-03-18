@@ -72,35 +72,25 @@ class NotificationHelper(private val context: Context) {
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
 
         // Pause / Resume action
-        val pauseResumeAction: Notification.Action
+        val pauseResumePending: PendingIntent
         if (isPaused) {
             val resumeIntent = Intent(context, RecorderService::class.java).apply {
                 action = RecorderService.ACTION_RESUME_RECORDING
             }
-            val resumePending = PendingIntent.getService(
+            pauseResumePending = PendingIntent.getService(
                 context, 1, resumeIntent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
-            builder.addAction(R.drawable.ic_resume, context.getString(R.string.action_resume), resumePending)
-            pauseResumeAction = Notification.Action.Builder(
-                Icon.createWithResource(context, R.drawable.ic_focus_resume),
-                context.getString(R.string.action_resume),
-                resumePending
-            ).build()
+            builder.addAction(R.drawable.ic_resume, context.getString(R.string.action_resume), pauseResumePending)
         } else {
             val pauseIntent = Intent(context, RecorderService::class.java).apply {
                 action = RecorderService.ACTION_PAUSE_RECORDING
             }
-            val pausePending = PendingIntent.getService(
+            pauseResumePending = PendingIntent.getService(
                 context, 1, pauseIntent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
-            builder.addAction(R.drawable.ic_pause, context.getString(R.string.action_pause), pausePending)
-            pauseResumeAction = Notification.Action.Builder(
-                Icon.createWithResource(context, R.drawable.ic_focus_pause),
-                context.getString(R.string.action_pause),
-                pausePending
-            ).build()
+            builder.addAction(R.drawable.ic_pause, context.getString(R.string.action_pause), pauseResumePending)
         }
 
         // Stop action
@@ -112,16 +102,11 @@ class NotificationHelper(private val context: Context) {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         builder.addAction(R.drawable.ic_stop, context.getString(R.string.action_stop), stopPending)
-        val stopAction = Notification.Action.Builder(
-            Icon.createWithResource(context, R.drawable.ic_focus_stop),
-            context.getString(R.string.action_stop),
-            stopPending
-        ).build()
 
         val notification = builder.build()
 
         // Add HyperOS Focus Island (超级岛) params
-        addFocusIslandParams(notification, durationMs, isPaused, pauseResumeAction, stopAction)
+        addFocusIslandParams(notification, durationMs, isPaused, pauseResumePending, stopPending)
 
         return notification
     }
@@ -130,8 +115,8 @@ class NotificationHelper(private val context: Context) {
         notification: Notification,
         durationMs: Long,
         isPaused: Boolean,
-        pauseResumeAction: Notification.Action,
-        stopAction: Notification.Action
+        pauseResumePending: PendingIntent,
+        stopPending: PendingIntent
     ) {
         val now = System.currentTimeMillis()
         val timerWhen = now - durationMs
@@ -177,6 +162,10 @@ class NotificationHelper(private val context: Context) {
             context.getString(R.string.notification_recording_message)
         }
 
+        // Determine icon keys based on pause state
+        val action1IconKey = if (isPaused) "miui.focus.pic_resume" else "miui.focus.pic_pause"
+        val action1IconDarkKey = if (isPaused) "miui.focus.pic_resume_dark" else "miui.focus.pic_pause_dark"
+
         val paramV2 = JSONObject().apply {
             put("protocol", 1)
             put("updatable", true)
@@ -202,11 +191,15 @@ class NotificationHelper(private val context: Context) {
                     put("actionIntentType", 0)
                     put("action", "miui.focus.action_1")
                     put("type", 0)
+                    put("actionIcon", action1IconKey)
+                    put("actionIconDark", action1IconDarkKey)
                 })
                 put(JSONObject().apply {
                     put("actionIntentType", 0)
                     put("action", "miui.focus.action_2")
                     put("type", 0)
+                    put("actionIcon", "miui.focus.pic_stop")
+                    put("actionIconDark", "miui.focus.pic_stop_dark")
                 })
             })
         }
@@ -223,14 +216,36 @@ class NotificationHelper(private val context: Context) {
             put("param_v2", paramV2)
         }
 
-        // Actions bundle with Notification.Action objects (include icons)
+        // Notification.Action objects for PendingIntent
+        val pauseResumeAction = Notification.Action.Builder(
+            null,
+            if (isPaused) context.getString(R.string.action_resume) else context.getString(R.string.action_pause),
+            pauseResumePending
+        ).build()
+        val stopAction = Notification.Action.Builder(
+            null, context.getString(R.string.action_stop), stopPending
+        ).build()
+
         val actionsBundle = Bundle().apply {
             putParcelable("miui.focus.action_1", pauseResumeAction)
             putParcelable("miui.focus.action_2", stopAction)
         }
 
+        // Icons bundle: light (for light bg) and dark (for dark bg) variants
+        val picsBundle = Bundle().apply {
+            // Light mode icons (black, for 焦点通知 light background)
+            putParcelable("miui.focus.pic_pause", Icon.createWithResource(context, R.drawable.ic_focus_pause_light))
+            putParcelable("miui.focus.pic_resume", Icon.createWithResource(context, R.drawable.ic_focus_resume_light))
+            putParcelable("miui.focus.pic_stop", Icon.createWithResource(context, R.drawable.ic_focus_stop_light))
+            // Dark mode icons (white, for 超级岛 dark background)
+            putParcelable("miui.focus.pic_pause_dark", Icon.createWithResource(context, R.drawable.ic_focus_pause))
+            putParcelable("miui.focus.pic_resume_dark", Icon.createWithResource(context, R.drawable.ic_focus_resume))
+            putParcelable("miui.focus.pic_stop_dark", Icon.createWithResource(context, R.drawable.ic_focus_stop))
+        }
+
         notification.extras.putString("miui.focus.param", focusParam.toString())
         notification.extras.putBundle("miui.focus.actions", actionsBundle)
+        notification.extras.putBundle("miui.focus.pics", picsBundle)
     }
 
     fun updateNotification(notification: Notification) {
