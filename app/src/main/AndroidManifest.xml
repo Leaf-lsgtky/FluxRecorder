@@ -51,6 +51,7 @@
             android:name="com.flux.recorder.RecordingShortcutActivity"
             android:exported="false"
             android:theme="@style/Theme.FluxRecorder.Transparent"
+            android:taskAffinity=""
             android:excludeFromRecents="true"
             android:noHistory="true" />
 

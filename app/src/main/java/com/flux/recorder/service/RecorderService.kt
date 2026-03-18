@@ -244,12 +244,22 @@ class RecorderService : Service() {
     private suspend fun recordingLoop() {
         var videoTrackAdded = false
         var lastNotificationUpdate = 0L
+        var lastPauseNotificationUpdate = 0L
 
         while (coroutineContext.isActive) {
             val state = _recordingState.value
             if (state !is RecordingState.Recording && state !is RecordingState.Paused) break
 
             if (state is RecordingState.Paused) {
+                // Update notification periodically to keep Focus Island in sync
+                val now = System.currentTimeMillis()
+                if (now - lastPauseNotificationUpdate >= 1000) {
+                    lastPauseNotificationUpdate = now
+                    val notification = notificationHelper.createRecordingNotification(
+                        state.durationMs, isPaused = true
+                    )
+                    notificationHelper.updateNotification(notification)
+                }
                 delay(100)
                 continue
             }
