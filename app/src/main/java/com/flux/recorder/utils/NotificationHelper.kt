@@ -122,6 +122,12 @@ class NotificationHelper(private val context: Context) {
         val timerWhen = now - durationMs
         val timerType = if (isPaused) 2 else 1
 
+        val contentText = if (isPaused) {
+            context.getString(R.string.notification_paused_message)
+        } else {
+            context.getString(R.string.notification_recording_message)
+        }
+
         val timerInfo = JSONObject().apply {
             put("timerWhen", timerWhen)
             put("timerType", timerType)
@@ -143,6 +149,7 @@ class NotificationHelper(private val context: Context) {
                     })
                 })
                 put("sameWidthDigitInfo", JSONObject().apply {
+                    put("content", contentText)
                     put("timerInfo", timerInfo)
                 })
             })
@@ -154,12 +161,6 @@ class NotificationHelper(private val context: Context) {
                     put("autoplay", !isPaused)
                 })
             })
-        }
-
-        val contentText = if (isPaused) {
-            context.getString(R.string.notification_paused_message)
-        } else {
-            context.getString(R.string.notification_recording_message)
         }
 
         // Determine icon keys based on pause state
@@ -177,6 +178,7 @@ class NotificationHelper(private val context: Context) {
             put("islandFirstFloat", false)
             put("param_island", paramIsland)
             put("animTextInfo", JSONObject().apply {
+                put("content", contentText)
                 put("timerInfo", timerInfo)
                 put("animIconInfo", JSONObject().apply {
                     put("type", 1)

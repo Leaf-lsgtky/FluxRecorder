@@ -245,7 +245,15 @@ class RecorderService : Service() {
         var videoTrackAdded = false
         var lastNotificationUpdate = 0L
 
-        while (coroutineContext.isActive && _recordingState.value is RecordingState.Recording) {
+        while (coroutineContext.isActive) {
+            val state = _recordingState.value
+            if (state !is RecordingState.Recording && state !is RecordingState.Paused) break
+
+            if (state is RecordingState.Paused) {
+                delay(100)
+                continue
+            }
+
             try {
                 // Get encoded video data
                 val output = videoEncoder?.getEncodedData() ?: VideoEncoder.EncoderOutput.TryAgain
@@ -303,7 +311,14 @@ class RecorderService : Service() {
         
         Log.d(TAG, "🎤 Starting audio loop with buffer size: $bufferSize")
         
-        while (coroutineContext.isActive && _recordingState.value is RecordingState.Recording) {
+        while (coroutineContext.isActive) {
+            val state = _recordingState.value
+            if (state !is RecordingState.Recording && state !is RecordingState.Paused) break
+
+            if (state is RecordingState.Paused) {
+                delay(100)
+                continue
+            }
             try {
                 // 1. Read Audio
                 val readResult = audioRecorder?.read(audioBuffer, bufferSize) ?: -1
