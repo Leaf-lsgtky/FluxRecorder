@@ -254,7 +254,7 @@ class RecorderService : Service() {
                 // Drain encoder output and discard (don't write to muxer)
                 val drainOutput = videoEncoder?.getEncodedData()
                 if (drainOutput is VideoEncoder.EncoderOutput.Data) {
-                    videoEncoder?.releaseOutputBuffer(drainOutput.bufferIndex)
+                    videoEncoder?.releaseOutputBuffer(drainOutput.index)
                 }
 
                 // Update notification periodically to keep Focus Island in sync
