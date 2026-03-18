@@ -326,7 +326,9 @@ class RecorderService : Service() {
             if (state !is RecordingState.Recording && state !is RecordingState.Paused) break
 
             if (state is RecordingState.Paused) {
-                delay(100)
+                // Drain audio buffer to prevent stale data on resume
+                audioRecorder?.read(audioBuffer, bufferSize)
+                delay(10)
                 continue
             }
             try {
