@@ -126,6 +126,13 @@
     <string name="error_encoder">编码器初始化失败</string>
     <string name="error_virtual_display">虚拟显示器创建失败</string>
 
+    <!-- Recording Dialog -->
+    <string name="dialog_record_title">要开始屏幕录制吗？</string>
+    <string name="dialog_record_summary">屏幕录制会访问应用内容，请录制应用页面时注意保护隐私信息。</string>
+    <string name="dialog_record_system_audio">录制系统声音</string>
+    <string name="dialog_record_microphone">录制麦克风声音</string>
+    <string name="dialog_record_start">开始录制</string>
+
     <!-- General -->
     <string name="ok">确定</string>
     <string name="cancel">取消</string>

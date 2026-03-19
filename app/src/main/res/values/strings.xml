@@ -125,6 +125,13 @@
     <string name="error_encoder">Failed to initialize encoder</string>
     <string name="error_virtual_display">Failed to create virtual display</string>
 
+    <!-- Recording Dialog -->
+    <string name="dialog_record_title">Start screen recording?</string>
+    <string name="dialog_record_summary">Screen recording accesses app content. Please be careful with private information when recording app screens.</string>
+    <string name="dialog_record_system_audio">Record system audio</string>
+    <string name="dialog_record_microphone">Record microphone</string>
+    <string name="dialog_record_start">Start recording</string>
+
     <!-- General -->
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
