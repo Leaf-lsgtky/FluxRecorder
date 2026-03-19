@@ -9,14 +9,19 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.flux.recorder.data.AudioSource
@@ -25,11 +30,12 @@ import com.flux.recorder.service.RecorderService
 import com.flux.recorder.ui.theme.FluxRecorderTheme
 import com.flux.recorder.utils.PreferencesManager
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.Switch
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.extra.SuperDialog
-import top.yukonga.miuix.kmp.extra.SuperSwitch
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 class RecordingShortcutActivity : ComponentActivity() {
 
@@ -101,17 +107,45 @@ class RecordingShortcutActivity : ComponentActivity() {
                         finish()
                     }
                 ) {
-                    Card {
-                        SuperSwitch(
-                            title = getString(R.string.dialog_record_system_audio),
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                systemAudio = !systemAudio
+                                prefs.edit().putBoolean(KEY_SYSTEM_AUDIO, systemAudio).apply()
+                            }
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = getString(R.string.dialog_record_system_audio),
+                            color = MiuixTheme.colorScheme.onBackground
+                        )
+                        Switch(
                             checked = systemAudio,
                             onCheckedChange = {
                                 systemAudio = it
                                 prefs.edit().putBoolean(KEY_SYSTEM_AUDIO, it).apply()
                             }
                         )
-                        SuperSwitch(
-                            title = getString(R.string.dialog_record_microphone),
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                microphone = !microphone
+                                prefs.edit().putBoolean(KEY_MICROPHONE, microphone).apply()
+                            }
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = getString(R.string.dialog_record_microphone),
+                            color = MiuixTheme.colorScheme.onBackground
+                        )
+                        Switch(
                             checked = microphone,
                             onCheckedChange = {
                                 microphone = it
@@ -119,6 +153,7 @@ class RecordingShortcutActivity : ComponentActivity() {
                             }
                         )
                     }
+                    Spacer(modifier = Modifier.height(16.dp))
                     Row(modifier = Modifier.fillMaxWidth()) {
                         TextButton(
                             text = getString(R.string.cancel),
