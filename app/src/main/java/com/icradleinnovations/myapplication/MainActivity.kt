@@ -41,22 +41,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
+        enableEdgeToEdge()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
         super.onCreate(savedInstanceState)
 
         setContent {
-            val darkMode = isSystemInDarkTheme()
-
-            DisposableEffect(darkMode) {
-                enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkMode },
-                    navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkMode },
-                )
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    window.isNavigationBarContrastEnforced = false
-                }
-                onDispose {}
-            }
-
             FluxRecorderTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize()

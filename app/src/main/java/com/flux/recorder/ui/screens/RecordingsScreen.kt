@@ -66,6 +66,7 @@ fun RecordingsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .systemBarsPadding()
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
                     .overScrollVertical(),
                 overscrollEffect = null,

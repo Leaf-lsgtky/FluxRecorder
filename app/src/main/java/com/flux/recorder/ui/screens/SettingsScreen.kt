@@ -64,6 +64,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .systemBarsPadding()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .overScrollVertical()
                 .verticalScroll(rememberScrollState())
