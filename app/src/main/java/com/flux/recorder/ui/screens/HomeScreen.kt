@@ -72,9 +72,11 @@ fun HomeScreen(
         }
     }
 
+    val scrollBehavior = MiuixScrollBehavior(rememberTopAppBarState())
+
     Scaffold(
         topBar = {
-            SmallTopAppBar(
+            TopAppBar(
                 title = stringResource(R.string.home_title),
                 actions = {
                     IconButton(onClick = onNavigateToRecordings) {
@@ -86,7 +88,8 @@ fun HomeScreen(
                     ) {
                         Icon(MiuixIcons.Settings, contentDescription = stringResource(R.string.cd_settings))
                     }
-                }
+                },
+                scrollBehavior = scrollBehavior
             )
         }
     ) { padding ->
