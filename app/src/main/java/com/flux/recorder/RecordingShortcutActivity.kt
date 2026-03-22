@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
@@ -111,6 +112,7 @@ class RecordingShortcutActivity : ComponentActivity() {
 
                 Scaffold(containerColor = Color.Transparent) { _ ->
                     SuperDialog(
+                        modifier = if (isLandscape) Modifier.widthIn(max = 600.dp) else Modifier,
                         title = if (!isLandscape) getString(R.string.dialog_record_title) else null,
                         summary = if (!isLandscape) getString(R.string.dialog_record_summary) else null,
                         show = showDialog,
@@ -162,7 +164,7 @@ class RecordingShortcutActivity : ComponentActivity() {
 
                                 // Right: buttons stacked vertically
                                 Column(
-                                    modifier = Modifier.width(210.dp).fillMaxHeight(),
+                                    modifier = Modifier.weight(1f).fillMaxHeight(),
                                     verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
                                 ) {
                                     TextButton(
