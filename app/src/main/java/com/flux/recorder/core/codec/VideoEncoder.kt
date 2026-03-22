@@ -3,83 +3,88 @@ package com.flux.recorder.core.codec
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
+import android.os.Build
 import android.util.Log
 import android.view.Surface
 import java.nio.ByteBuffer
 
 /**
- * Hardware-accelerated H.264/AVC video encoder using MediaCodec
+ * Hardware-accelerated video encoder using MediaCodec
+ * Supports H.264/AVC and H.265/HEVC with optional HDR
  */
 class VideoEncoder(
     private val width: Int,
     private val height: Int,
     private val bitrate: Int,
-    private val frameRate: Int
+    private val frameRate: Int,
+    private val mimeType: String = MediaFormat.MIMETYPE_VIDEO_AVC,
+    private val hdr: Boolean = false
 ) {
     private var mediaCodec: MediaCodec? = null
     var inputSurface: Surface? = null
         private set
-    
+
     companion object {
         private const val TAG = "VideoEncoder"
-        private const val MIME_TYPE = MediaFormat.MIMETYPE_VIDEO_AVC // H.264
-        private const val I_FRAME_INTERVAL = 2 // I-frame every 2 seconds (Better for size)
-        private const val TIMEOUT_US = 10000L // 10ms timeout
+        private const val I_FRAME_INTERVAL = 2
+        private const val TIMEOUT_US = 10000L
     }
-    
-    /**
-     * Initialize the encoder
-     */
+
     fun prepare(): Surface? {
         try {
-            // Create MediaFormat
-            val format = MediaFormat.createVideoFormat(MIME_TYPE, width, height).apply {
-                setInteger(MediaFormat.KEY_COLOR_FORMAT, 
+            val format = MediaFormat.createVideoFormat(mimeType, width, height).apply {
+                setInteger(MediaFormat.KEY_COLOR_FORMAT,
                     MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
                 setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
                 setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)
                 setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, I_FRAME_INTERVAL)
-                
-                // Enable VBR for efficiency
                 setInteger(MediaFormat.KEY_BITRATE_MODE, MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR)
-
-                // Repeat previous frame if no new frame is available (prevents freezing on static screens)
                 setLong(MediaFormat.KEY_REPEAT_PREVIOUS_FRAME_AFTER, 1000000L / frameRate)
+
+                // HDR support for H.265
+                if (hdr && mimeType == MediaFormat.MIMETYPE_VIDEO_HEVC) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        setInteger(MediaFormat.KEY_COLOR_STANDARD, MediaFormat.COLOR_STANDARD_BT2020)
+                        setInteger(MediaFormat.KEY_COLOR_TRANSFER, MediaFormat.COLOR_TRANSFER_HLG)
+                        setInteger(MediaFormat.KEY_COLOR_RANGE, MediaFormat.COLOR_RANGE_FULL)
+                        setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10)
+                        setFeatureEnabled(MediaCodecInfo.CodecCapabilities.FEATURE_HdrEditing, true)
+                        Log.d(TAG, "HDR (HLG) enabled for HEVC encoder")
+                    } else {
+                        setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10)
+                        Log.d(TAG, "HDR requested but API < 33, using Main10 profile only")
+                    }
+                }
             }
-            
-            // Create and configure encoder
-            mediaCodec = MediaCodec.createEncoderByType(MIME_TYPE).apply {
+
+            mediaCodec = MediaCodec.createEncoderByType(mimeType).apply {
                 configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
                 inputSurface = createInputSurface()
                 start()
             }
-            
-            Log.d(TAG, "Video encoder initialized: ${width}x${height} @ ${frameRate}fps, ${bitrate}bps")
+
+            Log.d(TAG, "Video encoder initialized: ${width}x${height} @ ${frameRate}fps, ${bitrate}bps, codec=$mimeType, hdr=$hdr")
             return inputSurface
-            
+
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize video encoder", e)
             release()
             return null
         }
     }
-    
+
     sealed interface EncoderOutput {
         data class Data(val buffer: ByteBuffer, val info: MediaCodec.BufferInfo, val index: Int) : EncoderOutput
         object FormatChanged : EncoderOutput
         object TryAgain : EncoderOutput
     }
 
-    /**
-     * Get encoded data
-     * @return EncoderOutput result
-     */
     fun getEncodedData(): EncoderOutput {
         val codec = mediaCodec ?: return EncoderOutput.TryAgain
-        
+
         val bufferInfo = MediaCodec.BufferInfo()
         val outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, TIMEOUT_US)
-        
+
         return when {
             outputBufferIndex >= 0 -> {
                 val outputBuffer = codec.getOutputBuffer(outputBufferIndex)
@@ -99,17 +104,11 @@ class VideoEncoder(
             else -> EncoderOutput.TryAgain
         }
     }
-    
-    /**
-     * Release output buffer after processing
-     */
+
     fun releaseOutputBuffer(index: Int) {
         mediaCodec?.releaseOutputBuffer(index, false)
     }
-    
-    /**
-     * Signal end of stream
-     */
+
     fun signalEndOfStream() {
         try {
             mediaCodec?.signalEndOfInputStream()
@@ -117,35 +116,26 @@ class VideoEncoder(
             Log.e(TAG, "Error signaling end of stream", e)
         }
     }
-    
-    /**
-     * Get output format (call after first buffer is dequeued)
-     */
+
     fun getOutputFormat(): MediaFormat? {
         return mediaCodec?.outputFormat
     }
-    
-    /**
-     * Release encoder resources
-     */
+
     fun release() {
         try {
             inputSurface?.release()
             inputSurface = null
-            
+
             mediaCodec?.stop()
             mediaCodec?.release()
             mediaCodec = null
-            
+
             Log.d(TAG, "Video encoder released")
         } catch (e: Exception) {
             Log.e(TAG, "Error releasing video encoder", e)
         }
     }
-    
-    /**
-     * Check if encoder is active
-     */
+
     fun isActive(): Boolean {
         return mediaCodec != null
     }

@@ -22,6 +22,7 @@ import com.flux.recorder.data.FrameRate
 import com.flux.recorder.data.RecordingSettings
 import com.flux.recorder.data.ScreenOrientation
 import com.flux.recorder.data.VideoBitrate
+import com.flux.recorder.data.VideoCodec
 import com.flux.recorder.data.VideoQuality
 import com.flux.recorder.utils.FileManager
 import com.flux.recorder.utils.PreferencesManager
@@ -163,6 +164,19 @@ fun SettingsScreen(
                     selectedIndex = FrameRate.entries.indexOf(currentSettings.frameRate),
                     onSelectedIndexChange = {
                         currentSettings = currentSettings.copy(frameRate = FrameRate.entries[it])
+                        onSettingsChanged(currentSettings)
+                    }
+                )
+
+                // Video Codec
+                val codecItems = VideoCodec.entries.map { stringResource(it.labelResId) }
+                SuperDropdown(
+                    title = stringResource(R.string.video_codec),
+                    summary = stringResource(R.string.video_codec_summary),
+                    items = codecItems,
+                    selectedIndex = VideoCodec.entries.indexOf(currentSettings.videoCodec),
+                    onSelectedIndexChange = {
+                        currentSettings = currentSettings.copy(videoCodec = VideoCodec.entries[it])
                         onSettingsChanged(currentSettings)
                     }
                 )

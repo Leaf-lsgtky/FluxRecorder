@@ -80,6 +80,14 @@ enum class AudioSource(@StringRes val labelResId: Int) {
 }
 
 /**
+ * Video codec options
+ */
+enum class VideoCodec(val mimeType: String, @StringRes val labelResId: Int) {
+    H264(android.media.MediaFormat.MIMETYPE_VIDEO_AVC, R.string.codec_h264),
+    H265(android.media.MediaFormat.MIMETYPE_VIDEO_HEVC, R.string.codec_h265)
+}
+
+/**
  * Recording configuration settings
  */
 @Parcelize
@@ -88,7 +96,8 @@ data class RecordingSettings(
     val videoBitrate: VideoBitrate = VideoBitrate.AUTO,
     val screenOrientation: ScreenOrientation = ScreenOrientation.AUTO,
     val frameRate: FrameRate = FrameRate.FPS_30,
-    val audioSource: AudioSource = AudioSource.BOTH
+    val audioSource: AudioSource = AudioSource.BOTH,
+    val videoCodec: VideoCodec = VideoCodec.H264
 ) : Parcelable {
     /**
      * Calculate bitrate: fixed value if user chose one, otherwise auto-compute

@@ -43,6 +43,8 @@
     <string name="audio_source_summary">Whether to record internal audio or microphone</string>
     <string name="frame_rate">Frame Rate</string>
     <string name="frame_rate_summary">Frames per second. Higher means smoother video</string>
+    <string name="video_codec">Video Codec</string>
+    <string name="video_codec_summary">H.265 supports HDR and is more efficient</string>
     <string name="section_storage">Storage</string>
     <string name="storage_path">Storage Path</string>
 
@@ -79,6 +81,10 @@
     <string name="fps_60">60 FPS</string>
     <string name="fps_90">90 FPS</string>
     <string name="fps_120">120 FPS</string>
+
+    <!-- Codec Options -->
+    <string name="codec_h264">H.264 (AVC)</string>
+    <string name="codec_h265">H.265 (HEVC + HDR)</string>
 
     <!-- Audio Options -->
     <string name="audio_none">No Audio</string>

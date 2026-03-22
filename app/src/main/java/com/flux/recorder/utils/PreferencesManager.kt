@@ -7,6 +7,7 @@ import com.flux.recorder.data.FrameRate
 import com.flux.recorder.data.RecordingSettings
 import com.flux.recorder.data.ScreenOrientation
 import com.flux.recorder.data.VideoBitrate
+import com.flux.recorder.data.VideoCodec
 import com.flux.recorder.data.VideoQuality
 
 /**
@@ -24,6 +25,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_SCREEN_ORIENTATION = "screen_orientation"
         private const val KEY_FRAME_RATE = "frame_rate"
         private const val KEY_AUDIO_SOURCE = "audio_source"
+        private const val KEY_VIDEO_CODEC = "video_codec"
         private const val KEY_STORAGE_PATH = "storage_path"
 
         private const val KEY_FIRST_LAUNCH = "first_launch"
@@ -70,6 +72,14 @@ class PreferencesManager(context: Context) {
                 )
             } catch (_: IllegalArgumentException) {
                 AudioSource.BOTH
+            },
+            videoCodec = try {
+                VideoCodec.valueOf(
+                    prefs.getString(KEY_VIDEO_CODEC, VideoCodec.H264.name)
+                        ?: VideoCodec.H264.name
+                )
+            } catch (_: IllegalArgumentException) {
+                VideoCodec.H264
             }
         )
     }
@@ -81,6 +91,7 @@ class PreferencesManager(context: Context) {
             putString(KEY_SCREEN_ORIENTATION, settings.screenOrientation.name)
             putString(KEY_FRAME_RATE, settings.frameRate.name)
             putString(KEY_AUDIO_SOURCE, settings.audioSource.name)
+            putString(KEY_VIDEO_CODEC, settings.videoCodec.name)
             apply()
         }
     }

@@ -44,6 +44,8 @@
     <string name="audio_source_summary">是否录制系统内部声音或麦克风声音</string>
     <string name="frame_rate">帧数</string>
     <string name="frame_rate_summary">每秒钟录制的帧数，越高画越流畅</string>
+    <string name="video_codec">视频编码</string>
+    <string name="video_codec_summary">H.265 支持 HDR 且更高效</string>
     <string name="section_storage">存储</string>
     <string name="storage_path">存储路径</string>
 
@@ -80,6 +82,10 @@
     <string name="fps_60">60 帧</string>
     <string name="fps_90">90 帧</string>
     <string name="fps_120">120 帧</string>
+
+    <!-- Codec Options -->
+    <string name="codec_h264">H.264 (AVC)</string>
+    <string name="codec_h265">H.265 (HEVC + HDR)</string>
 
     <!-- Audio Options -->
     <string name="audio_none">无声音</string>
