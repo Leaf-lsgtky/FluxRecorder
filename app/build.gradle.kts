@@ -27,16 +27,16 @@ android {
     signingConfigs {
         create("release") {
             // Read from environment variables (GitHub Secrets)
-            val keystoreFile = System.getenv("SIGNING_KEY")
-            val keystorePassword = System.getenv("KEYSTORE_PASSWORD")
-            val alias = System.getenv("ALIAS")
-            val keyPassword = System.getenv("KEY_PASSWORD")
+            val envKeystoreFile = System.getenv("SIGNING_KEY")
+            val envKeystorePassword = System.getenv("KEYSTORE_PASSWORD")
+            val envAlias = System.getenv("ALIAS")
+            val envKeyPassword = System.getenv("KEY_PASSWORD")
 
-            if (keystoreFile != null) {
-                storeFile = file(keystoreFile)
-                storePassword = keystorePassword
-                keyAlias = alias
-                keyPassword = keyPassword
+            if (envKeystoreFile != null) {
+                storeFile = file(envKeystoreFile)
+                storePassword = envKeystorePassword
+                keyAlias = envAlias
+                keyPassword = envKeyPassword
             }
         }
     }
