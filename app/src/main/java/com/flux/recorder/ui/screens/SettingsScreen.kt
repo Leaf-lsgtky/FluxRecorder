@@ -9,8 +9,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import android.content.Intent
+import android.net.Uri
+import android.provider.DocumentsContract
 import android.util.DisplayMetrics
 import android.view.WindowManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import com.flux.recorder.R
 import com.flux.recorder.data.AudioSource
 import com.flux.recorder.data.FrameRate
@@ -22,7 +27,6 @@ import com.flux.recorder.utils.FileManager
 import com.flux.recorder.utils.PreferencesManager
 import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.extra.SuperArrow
-import top.yukonga.miuix.kmp.extra.SuperDialog
 import top.yukonga.miuix.kmp.extra.SuperDropdown
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
@@ -39,8 +43,22 @@ fun SettingsScreen(
     val context = LocalContext.current
     val prefsManager = remember { PreferencesManager(context) }
     var storagePath by remember { mutableStateOf(prefsManager.getStoragePath()) }
-    val showPathDialog = remember { mutableStateOf(false) }
-    var editingPath by remember { mutableStateOf(storagePath) }
+
+    val folderPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            // Convert content URI to real file path
+            val docUri = DocumentsContract.buildDocumentUriUsingTree(
+                uri, DocumentsContract.getTreeDocumentId(uri)
+            )
+            val path = uriToFilePath(docUri)
+            if (path != null) {
+                storagePath = path
+                prefsManager.setStoragePath(path)
+            }
+        }
+    }
     val (screenW, screenH) = remember {
         val wm = context.getSystemService(android.content.Context.WINDOW_SERVICE) as WindowManager
         val metrics = DisplayMetrics()
@@ -157,42 +175,18 @@ fun SettingsScreen(
                 SuperArrow(
                     title = stringResource(R.string.storage_path),
                     summary = storagePath,
-                    onClick = {
-                        editingPath = storagePath
-                        showPathDialog.value = true
-                    }
+                    onClick = { folderPicker.launch(null) }
                 )
-            }
-
-            SuperDialog(
-                title = stringResource(R.string.storage_path),
-                show = showPathDialog,
-                onDismissRequest = { showPathDialog.value = false }
-            ) {
-                TextField(
-                    value = editingPath,
-                    onValueChange = { editingPath = it },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-                )
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    TextButton(
-                        text = stringResource(R.string.cancel),
-                        onClick = { showPathDialog.value = false },
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    TextButton(
-                        text = stringResource(R.string.ok),
-                        onClick = {
-                            storagePath = editingPath
-                            prefsManager.setStoragePath(editingPath)
-                            showPathDialog.value = false
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.textButtonColorsPrimary()
-                    )
-                }
             }
         }
     }
+}
+
+private fun uriToFilePath(uri: Uri): String? {
+    val docId = DocumentsContract.getDocumentId(uri)
+    val split = docId.split(":")
+    if (split.size >= 2 && split[0] == "primary") {
+        return "/storage/emulated/0/${split[1]}"
+    }
+    return null
 }
