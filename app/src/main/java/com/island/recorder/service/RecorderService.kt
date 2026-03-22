@@ -18,6 +18,7 @@ import com.island.recorder.data.RecordingState
 import com.island.recorder.data.ScreenOrientation
 import com.island.recorder.utils.FileManager
 import com.island.recorder.utils.NotificationHelper
+import com.island.recorder.utils.RootUtils
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
