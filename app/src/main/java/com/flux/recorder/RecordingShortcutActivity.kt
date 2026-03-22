@@ -127,7 +127,14 @@ class RecordingShortcutActivity : ComponentActivity() {
                                     Text(
                                         text = getString(R.string.dialog_record_title),
                                         style = MiuixTheme.textStyles.title4,
-                                        color = MiuixTheme.colorScheme.onBackground
+                                        color = MiuixTheme.colorScheme.onBackground,
+                                        fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = getString(R.string.dialog_record_summary),
+                                        style = MiuixTheme.textStyles.body1,
+                                        color = MiuixTheme.colorScheme.onSurfaceSecondary
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
                                     SwitchRow(
@@ -155,7 +162,7 @@ class RecordingShortcutActivity : ComponentActivity() {
 
                                 // Right: buttons stacked vertically
                                 Column(
-                                    modifier = Modifier.width(120.dp),
+                                    modifier = Modifier.width(210.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     TextButton(
