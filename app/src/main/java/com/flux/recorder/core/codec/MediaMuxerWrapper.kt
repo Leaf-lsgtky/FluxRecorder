@@ -76,11 +76,13 @@ class MediaMuxerWrapper(private val outputFile: File) {
         if (!format.containsKey(MediaFormat.KEY_COLOR_TRANSFER)) return
 
         val transfer = format.getInteger(MediaFormat.KEY_COLOR_TRANSFER)
-        val isHdr = (transfer == COLOR_TRANSFER_HLG || transfer == COLOR_TRANSFER_PQ)
+        
+        // ONLY inject static metadata for PQ (ST2084). 
+        // Adding static metadata to HLG is non-standard and causes severe color shifts 
+        // because decoders try to tone-map HLG as if it were PQ.
+        if (transfer != COLOR_TRANSFER_PQ) return
 
-        if (!isHdr) return
-
-        Log.d(TAG, "Injecting HDR metadata for HDR content (transfer=$transfer)")
+        Log.d(TAG, "Injecting static metadata for PQ content")
 
         // HDR metadata using KEY_HDR_STATIC_INFO (API 24+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

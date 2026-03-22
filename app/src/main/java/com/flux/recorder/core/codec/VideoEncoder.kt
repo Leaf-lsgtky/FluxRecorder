@@ -53,8 +53,8 @@ class VideoEncoder(
     ) {
         companion object {
             val SDR = HdrConfig(COLOR_STANDARD_BT709, COLOR_TRANSFER_SDR, COLOR_RANGE_LIMITED)
-            val HDR_HLG = HdrConfig(COLOR_STANDARD_BT2020, COLOR_TRANSFER_HLG, COLOR_RANGE_LIMITED)
-            val HDR_PQ = HdrConfig(COLOR_STANDARD_BT2020, COLOR_TRANSFER_PQ, COLOR_RANGE_LIMITED)
+            val HDR_HLG = HdrConfig(COLOR_STANDARD_BT2020, COLOR_TRANSFER_HLG, COLOR_RANGE_FULL)
+            val HDR_PQ = HdrConfig(COLOR_STANDARD_BT2020, COLOR_TRANSFER_PQ, COLOR_RANGE_FULL)
         }
     }
 
@@ -74,17 +74,11 @@ class VideoEncoder(
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10)
                         
-                        // For "Global HDR" effect, we initialize with HDR_HLG from the start.
-                        // This ensures the input Surface is configured for 10-bit HDR data.
+                        // For Global HDR, we use HLG but with FULL range to match the screen's output.
                         applyHdrConfig(HdrConfig.HDR_HLG)
                         isHdrActive = true
-
-                        // Android 14+ (API 34): Request the system to map content to HLG
-                        if (Build.VERSION.SDK_INT >= 34) {
-                            setInteger("color-transfer-request", COLOR_TRANSFER_HLG)
-                        }
                         
-                        Log.d(TAG, "Global HDR enabled: HEVC Main10 + BT.2020 + HLG")
+                        Log.d(TAG, "Global HDR mode: HEVC Main10 + BT.2020 + HLG + FULL RANGE")
                     } else {
                         setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.HEVCProfileMain)
                         Log.d(TAG, "HEVC Main profile enabled (8-bit)")
