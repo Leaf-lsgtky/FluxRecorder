@@ -45,6 +45,8 @@
     <string name="frame_rate_summary">Frames per second. Higher means smoother video</string>
     <string name="video_codec">Video Codec</string>
     <string name="video_codec_summary">H.265 supports HDR and is more efficient</string>
+    <string name="show_touches">Show Screen Touches</string>
+    <string name="show_touches_summary">Show a white dot where fingers touch (Root Required)</string>
     <string name="section_storage">Storage</string>
     <string name="storage_path">Storage Path</string>
 

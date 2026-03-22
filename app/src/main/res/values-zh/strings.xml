@@ -46,6 +46,8 @@
     <string name="frame_rate_summary">每秒钟录制的帧数，越高画越流畅</string>
     <string name="video_codec">视频编码</string>
     <string name="video_codec_summary">H.265 支持 HDR 且更高效</string>
+    <string name="show_touches">显示屏幕触摸</string>
+    <string name="show_touches_summary">手指点击的地方显示小白点 (需要 Root)</string>
     <string name="section_storage">存储</string>
     <string name="storage_path">存储路径</string>
 

@@ -26,6 +26,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_FRAME_RATE = "frame_rate"
         private const val KEY_AUDIO_SOURCE = "audio_source"
         private const val KEY_VIDEO_CODEC = "video_codec"
+        private const val KEY_SHOW_TOUCHES = "show_touches"
         private const val KEY_STORAGE_PATH = "storage_path"
 
         private const val KEY_FIRST_LAUNCH = "first_launch"
@@ -80,7 +81,8 @@ class PreferencesManager(context: Context) {
                 )
             } catch (_: IllegalArgumentException) {
                 VideoCodec.H264
-            }
+            },
+            showTouches = prefs.getBoolean(KEY_SHOW_TOUCHES, false)
         )
     }
 
@@ -92,6 +94,7 @@ class PreferencesManager(context: Context) {
             putString(KEY_FRAME_RATE, settings.frameRate.name)
             putString(KEY_AUDIO_SOURCE, settings.audioSource.name)
             putString(KEY_VIDEO_CODEC, settings.videoCodec.name)
+            putBoolean(KEY_SHOW_TOUCHES, settings.showTouches)
             apply()
         }
     }

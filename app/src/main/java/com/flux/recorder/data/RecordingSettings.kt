@@ -98,7 +98,8 @@ data class RecordingSettings(
     val screenOrientation: ScreenOrientation = ScreenOrientation.AUTO,
     val frameRate: FrameRate = FrameRate.FPS_30,
     val audioSource: AudioSource = AudioSource.BOTH,
-    val videoCodec: VideoCodec = VideoCodec.H264
+    val videoCodec: VideoCodec = VideoCodec.H264,
+    val showTouches: Boolean = false
 ) : Parcelable {
     /**
      * Calculate bitrate: fixed value if user chose one, otherwise auto-compute

@@ -26,9 +26,11 @@ import com.flux.recorder.data.VideoCodec
 import com.flux.recorder.data.VideoQuality
 import com.flux.recorder.utils.FileManager
 import com.flux.recorder.utils.PreferencesManager
+import com.flux.recorder.utils.RootUtils
 import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.extra.SuperArrow
 import top.yukonga.miuix.kmp.extra.SuperDropdown
+import top.yukonga.miuix.kmp.extra.SuperSwitch
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.utils.overScrollVertical
@@ -44,6 +46,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val prefsManager = remember { PreferencesManager(context) }
     var storagePath by remember { mutableStateOf(prefsManager.getStoragePath()) }
+    val isRooted = remember { RootUtils.isRooted() }
 
     val folderPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
@@ -178,6 +181,21 @@ fun SettingsScreen(
                     onSelectedIndexChange = {
                         currentSettings = currentSettings.copy(videoCodec = VideoCodec.entries[it])
                         onSettingsChanged(currentSettings)
+                    }
+                )
+
+                // Show Touches
+                SuperSwitch(
+                    title = stringResource(R.string.show_touches),
+                    summary = stringResource(R.string.show_touches_summary),
+                    checked = currentSettings.showTouches,
+                    enabled = isRooted,
+                    onCheckedChange = {
+                        currentSettings = currentSettings.copy(showTouches = it)
+                        onSettingsChanged(currentSettings)
+                        if (isRooted) {
+                            RootUtils.setShowTouches(it)
+                        }
                     }
                 )
             }
