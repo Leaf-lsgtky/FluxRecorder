@@ -112,7 +112,7 @@ class RecordingShortcutActivity : ComponentActivity() {
 
                 Scaffold(containerColor = Color.Transparent) { _ ->
                     SuperDialog(
-                        modifier = if (isLandscape) Modifier.widthIn(max = 600.dp) else Modifier,
+                        modifier = if (isLandscape) Modifier.widthIn(max = 900.dp) else Modifier,
                         title = if (!isLandscape) getString(R.string.dialog_record_title) else null,
                         summary = if (!isLandscape) getString(R.string.dialog_record_summary) else null,
                         show = showDialog,
