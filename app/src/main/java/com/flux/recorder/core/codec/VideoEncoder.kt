@@ -33,14 +33,14 @@ class VideoEncoder(
         private const val I_FRAME_INTERVAL = 2
         private const val TIMEOUT_US = 10000L
 
-        // HDR color space constants
+        // HDR color space constants (matching MediaFormat values)
         private const val COLOR_STANDARD_BT709 = 1
-        private const val COLOR_STANDARD_BT2020 = 9
-        private const val COLOR_TRANSFER_SDR = 1
-        private const val COLOR_TRANSFER_HLG = 6
-        private const val COLOR_TRANSFER_PQ = 8
-        private const val COLOR_RANGE_LIMITED = 1
-        private const val COLOR_RANGE_FULL = 2
+        private const val COLOR_STANDARD_BT2020 = 6
+        private const val COLOR_TRANSFER_SDR = 3
+        private const val COLOR_TRANSFER_HLG = 7
+        private const val COLOR_TRANSFER_PQ = 6
+        private const val COLOR_RANGE_LIMITED = 2
+        private const val COLOR_RANGE_FULL = 1
     }
 
     /**
@@ -71,15 +71,15 @@ class VideoEncoder(
 
                 // H.265/HEVC: Use Main10 profile for 10-bit HDR support
                 if (mimeType == MediaFormat.MIMETYPE_VIDEO_HEVC) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10)
-                        // Start with SDR color space, will update dynamically if HDR content detected
-                        applyHdrConfig(HdrConfig.SDR)
-                        Log.d(TAG, "HEVC Main10 profile enabled with dynamic HDR support")
-                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10)
-                        applyHdrConfig(HdrConfig.SDR)
-                        Log.d(TAG, "HEVC Main10 profile enabled (API 29-32)")
+                        
+                        // To record HDR content correctly, we must set the color space parameters BEFORE 
+                        // calling configure() and createInputSurface(). 
+                        // Initializing as HDR HLG ensures the surface can receive 10-bit data.
+                        applyHdrConfig(HdrConfig.HDR_HLG)
+                        isHdrActive = true
+                        Log.d(TAG, "HEVC Main10 profile enabled with HDR HLG color space")
                     } else {
                         setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.HEVCProfileMain)
                         Log.d(TAG, "HEVC Main profile enabled (8-bit, API < 29)")

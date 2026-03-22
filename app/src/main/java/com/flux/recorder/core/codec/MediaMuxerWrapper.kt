@@ -26,9 +26,9 @@ class MediaMuxerWrapper(private val outputFile: File) {
     companion object {
         private const val TAG = "MediaMuxerWrapper"
 
-        // HDR transfer functions
-        private const val COLOR_TRANSFER_HLG = 6
-        private const val COLOR_TRANSFER_PQ = 8
+        // HDR transfer functions (matching MediaFormat constants)
+        private const val COLOR_TRANSFER_HLG = 7
+        private const val COLOR_TRANSFER_PQ = 6
     }
 
     /**
