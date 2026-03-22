@@ -10,6 +10,6 @@ import top.yukonga.miuix.kmp.theme.ThemeController
 fun FluxRecorderTheme(
     content: @Composable () -> Unit
 ) {
-    val controller = remember { ThemeController(ColorSchemeMode.System) }
+    val controller = remember { ThemeController() }
     MiuixTheme(controller = controller, content = content)
 }
