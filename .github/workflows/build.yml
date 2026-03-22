@@ -34,6 +34,11 @@ jobs:
 
       - name: Build Release APK
         run: ./gradlew assembleRelease
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ALIAS: ${{ secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v7
