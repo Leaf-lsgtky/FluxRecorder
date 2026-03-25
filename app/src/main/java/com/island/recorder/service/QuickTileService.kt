@@ -62,7 +62,7 @@ class QuickTileService : TileService() {
         val prefs = PreferencesManager(this)
         val tileStyle = prefs.getRecordingSettings().tileStyle
         val iconRes = if (tileStyle == TileStyle.APP_ICON) {
-            R.drawable.ic_launcher_foreground
+            R.drawable.ic_launcher_foreground_large
         } else {
             R.drawable.ic_record
         }

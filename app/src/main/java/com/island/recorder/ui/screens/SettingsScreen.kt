@@ -209,7 +209,7 @@ fun SettingsScreen(
                                     else R.drawable.ic_record
                                 ),
                                 contentDescription = null,
-                                modifier = modifier.size(24.dp) // Scale down preview icon
+                                modifier = modifier.size(24.dp)
                             )
                         },
                         title = stringResource(style.labelResId)
