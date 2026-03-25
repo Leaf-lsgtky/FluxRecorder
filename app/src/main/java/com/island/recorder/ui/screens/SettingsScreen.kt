@@ -27,6 +27,7 @@ import com.island.recorder.data.VideoQuality
 import com.island.recorder.utils.FileManager
 import com.island.recorder.utils.PreferencesManager
 import com.island.recorder.utils.RootUtils
+import com.island.recorder.utils.ShizukuHelper
 import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.extra.SuperArrow
 import top.yukonga.miuix.kmp.extra.SuperDropdown
@@ -206,6 +207,46 @@ fun SettingsScreen(
                     title = stringResource(R.string.storage_path),
                     summary = storagePath,
                     onClick = { folderPicker.launch(null) }
+                )
+            }
+
+            SmallTitle(text = stringResource(R.string.section_hyperos))
+            Card(
+                modifier = Modifier.padding(horizontal = 12.dp)
+            ) {
+                var shizukuEnabled by remember { mutableStateOf(prefsManager.isShizukuFocusBypassEnabled()) }
+                SuperSwitch(
+                    title = stringResource(R.string.shizuku_focus_bypass),
+                    summary = stringResource(R.string.shizuku_focus_bypass_summary),
+                    checked = shizukuEnabled,
+                    onCheckedChange = { checked ->
+                        if (checked) {
+                            if (!ShizukuHelper.isAvailable()) {
+                                // Shizuku not running
+                                return@SuperSwitch
+                            }
+                            if (ShizukuHelper.hasPermission()) {
+                                shizukuEnabled = true
+                                prefsManager.setShizukuFocusBypassEnabled(true)
+                            } else {
+                                val requestCode = 100
+                                val listener = object : rikka.shizuku.Shizuku.OnRequestPermissionResultListener {
+                                    override fun onRequestPermissionResult(rc: Int, grantResult: Int) {
+                                        if (rc == requestCode && grantResult == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                            shizukuEnabled = true
+                                            prefsManager.setShizukuFocusBypassEnabled(true)
+                                        }
+                                        ShizukuHelper.removePermissionResultListener(this)
+                                    }
+                                }
+                                ShizukuHelper.addPermissionResultListener(listener)
+                                ShizukuHelper.requestPermission(requestCode)
+                            }
+                        } else {
+                            shizukuEnabled = false
+                            prefsManager.setShizukuFocusBypassEnabled(false)
+                        }
+                    }
                 )
             }
 

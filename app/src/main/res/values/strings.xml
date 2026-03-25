@@ -49,6 +49,11 @@
     <string name="section_storage">Storage</string>
     <string name="storage_path">Storage Path</string>
 
+    <!-- HyperOS -->
+    <string name="section_hyperos">MIUI/HyperOS Optimization</string>
+    <string name="shizuku_focus_bypass">Focus Island Shizuku Bypass</string>
+    <string name="shizuku_focus_bypass_summary">Bypass HyperOS Focus Island whitelist via Shizuku (Requires Shizuku to be running)</string>
+
     <!-- Quality Options -->
     <string name="quality_native">Native</string>
     <string name="quality_fhd">1080p</string>

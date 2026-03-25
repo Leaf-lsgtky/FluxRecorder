@@ -28,8 +28,17 @@ class PreferencesManager(context: Context) {
         private const val KEY_VIDEO_CODEC = "video_codec"
         private const val KEY_SHOW_TOUCHES = "show_touches"
         private const val KEY_STORAGE_PATH = "storage_path"
+        private const val KEY_SHIZUKU_FOCUS_BYPASS = "shizuku_focus_bypass"
 
         private const val KEY_FIRST_LAUNCH = "first_launch"
+    }
+
+    fun isShizukuFocusBypassEnabled(): Boolean {
+        return prefs.getBoolean(KEY_SHIZUKU_FOCUS_BYPASS, false)
+    }
+
+    fun setShizukuFocusBypassEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_SHIZUKU_FOCUS_BYPASS, enabled).apply()
     }
 
     fun getRecordingSettings(): RecordingSettings {

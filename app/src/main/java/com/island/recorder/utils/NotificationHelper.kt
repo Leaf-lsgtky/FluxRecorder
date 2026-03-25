@@ -6,9 +6,11 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.island.recorder.ui.MainActivity
 import com.island.recorder.R
@@ -19,10 +21,13 @@ import org.json.JSONObject
 class NotificationHelper(private val context: Context) {
 
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private val prefs = PreferencesManager(context)
 
     companion object {
         const val CHANNEL_ID = "recording_channel"
         const val NOTIFICATION_ID = 1001
+        private const val XMSF_PACKAGE = "com.xiaomi.xmsf"
+        private const val BLIND_WINDOW_MS = 100L
     }
 
     init {
@@ -250,6 +255,34 @@ class NotificationHelper(private val context: Context) {
     }
 
     fun updateNotification(notification: Notification) {
+        if (prefs.isShizukuFocusBypassEnabled() && ShizukuHelper.isAvailable() && ShizukuHelper.hasPermission()) {
+            val xmsfUid = try {
+                context.packageManager.getPackageUid(XMSF_PACKAGE, 0)
+            } catch (_: PackageManager.NameNotFoundException) {
+                null
+            }
+
+            if (xmsfUid != null) {
+                Thread {
+                    var blocked = false
+                    try {
+                        blocked = ShizukuHelper.blockNetwork(xmsfUid, XMSF_PACKAGE)
+                        notificationManager.notify(NOTIFICATION_ID, notification)
+                        if (blocked) {
+                            Thread.sleep(BLIND_WINDOW_MS)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("NotificationHelper", "Bypass failed", e)
+                        notificationManager.notify(NOTIFICATION_ID, notification)
+                    } finally {
+                        if (blocked) {
+                            ShizukuHelper.unblockNetwork(xmsfUid, XMSF_PACKAGE)
+                        }
+                    }
+                }.start()
+                return
+            }
+        }
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 

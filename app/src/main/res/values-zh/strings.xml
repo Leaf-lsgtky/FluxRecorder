@@ -50,6 +50,11 @@
     <string name="section_storage">存储</string>
     <string name="storage_path">存储路径</string>
 
+    <!-- HyperOS -->
+    <string name="section_hyperos">MIUI/HyperOS 优化</string>
+    <string name="shizuku_focus_bypass">Shizuku 焦点通知绕过</string>
+    <string name="shizuku_focus_bypass_summary">使用 Shizuku 绕过 HyperOS 焦点通知白名单 (需要 Shizuku 正在运行)</string>
+
     <!-- Quality Options -->
     <string name="quality_native">原生</string>
     <string name="quality_fhd">1080p</string>
