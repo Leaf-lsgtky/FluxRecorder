@@ -209,14 +209,6 @@ class NotificationHelper(private val context: Context) {
         }
 
         val focusParam = JSONObject().apply {
-            put("protocol", 1)
-            put("timerWhen", timerWhen)
-            put("timerType", timerType)
-            put("timerSystemCurrent", now)
-            put("updatable", true)
-            put("enableFloat", false)
-            put("content", contentText)
-            put("scene", "recorder")
             put("param_v2", paramV2)
         }
 

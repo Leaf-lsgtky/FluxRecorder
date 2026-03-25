@@ -1,11 +1,11 @@
-name: Android Build
+name: Build OppoPods v7-Final
 
 on:
   push:
-    branches: [ "master", "main", "develop" ]
     tags: [ "v*" ]
+    branches: [ "master", "main" ]
   pull_request:
-    branches: [ "master", "main", "develop" ]
+    branches: [ "master", "main" ]
   workflow_dispatch:
 
 jobs:
@@ -13,77 +13,80 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          distribution: temurin
+          java-version: 21
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Grant execute permission for gradlew
+      - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Build All APKs
+      # 编译 APK
+      - name: Build APKs
         run: ./gradlew assembleDebug assembleRelease
 
-      - name: Sign and Finalize APKs
+      # 签名逻辑
+      - name: Sign release APK
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        if: ${{ env.SIGNING_KEY != '' }}
         run: |
-          # 提取并命名，直接放在根目录防止路径嵌套
-          DEBUG_RAW=$(find app/build/outputs/apk/debug -name "*.apk" | head -1)
+          echo "${{ secrets.SIGNING_KEY }}" | base64 -d > /tmp/keystore.jks
+          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/*/ | sort -V | tail -1)
+          UNSIGNED_APK=$(find app/build/outputs/apk/release -name '*-unsigned.apk' | head -1)
+          
+          # 统一输出到当前目录，消除深层路径干扰
+          ${BUILD_TOOLS}zipalign -f 4 "$UNSIGNED_APK" ./release.apk
+          
+          ${BUILD_TOOLS}apksigner sign \
+            --ks /tmp/keystore.jks \
+            --ks-key-alias "${{ secrets.ALIAS }}" \
+            --ks-pass "pass:${{ secrets.KEYSTORE_PASSWORD }}" \
+            --key-pass "pass:${{ secrets.KEY_PASSWORD }}" \
+            ./release.apk
+          rm /tmp/keystore.jks
+
+      - name: Prepare Debug APK
+        run: |
+          DEBUG_RAW=$(find app/build/outputs/apk/debug -name '*.apk' | head -1)
           cp "$DEBUG_RAW" ./debug.apk
 
-          if [ -n "$SIGNING_KEY" ]; then
-            echo "$SIGNING_KEY" | base64 -d > /tmp/release.jks
-            BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/*/ | sort -V | tail -1)
-            UNSIGNED_APK=$(find app/build/outputs/apk/release -name "*-unsigned.apk" | head -1)
-            ${BUILD_TOOLS}zipalign -f 4 "$UNSIGNED_APK" ./release.apk
-            ${BUILD_TOOLS}apksigner sign \
-              --ks /tmp/release.jks --ks-key-alias "${{ secrets.ALIAS }}" \
-              --ks-pass "pass:${{ secrets.KEYSTORE_PASSWORD }}" --key-pass "pass:${{ secrets.KEY_PASSWORD }}" \
-              ./release.apk
-            rm /tmp/release.jks
-          else
-            RELEASE_RAW=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
-            cp "$RELEASE_RAW" ./release.apk
-          fi
-
       # =======================================================
-      # 重点：分两个独立 Step 上传，这是避免 ZIP 的终极必杀技
+      # 重点：严格使用 v7 版本并开启 archive: false
       # =======================================================
       
-      - name: Upload Debug APK (Direct Download)
-        uses: actions/upload-artifact@v4
+      - name: Upload Release APK (Unzipped)
+        uses: actions/upload-artifact@v7
         with:
-          name: debug-apk  # 独立的 Artifact 名字
-          path: ./debug.apk
-          compression-level: 0 # 彻底禁用压缩
-
-      - name: Upload Release APK (Direct Download)
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-apk # 另一个独立名字
+          name: release.apk   # 明确带后缀的名字
           path: ./release.apk
-          compression-level: 0
+          archive: false      # 核心：2026新特性，禁止打包成zip
+
+      - name: Upload Debug APK (Unzipped)
+        uses: actions/upload-artifact@v7
+        with:
+          name: debug.apk
+          path: ./debug.apk
+          archive: false
 
       # =======================================================
 
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ./debug.apk
-            ./release.apk
-          generate_release_notes: true
-          name: "OppoPods Release ${{ github.ref_name }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && env.SIGNING_KEY != '' }}
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ github.token }}
+          # 多个文件用逗号隔开
+          artifacts: "./release.apk,./debug.apk"
+          generateReleaseNotes: true
+          makeLatest: true
