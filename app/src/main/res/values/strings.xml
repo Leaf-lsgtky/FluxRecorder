@@ -46,10 +46,10 @@
     <string name="video_codec_summary">H.265 supports HDR and is more efficient</string>
     <string name="show_touches">Show Screen Touches</string>
     <string name="show_touches_summary">Show a white dot where fingers touch (Root Required)</string>
-    <string name="tile_style">Quick Tile Icon Style</string>
+    <string name="tile_style">Recording Style</string>
     <string name="tile_style_summary">Choose the icon style for the Quick Settings tile</string>
-    <string name="tile_style_default">Default</string>
-    <string name="tile_style_app_icon">App Icon Foreground</string>
+    <string name="tile_style_default">Recorder Style</string>
+    <string name="tile_style_app_icon">App Icon Style</string>
     <string name="section_storage">Storage</string>
     <string name="storage_path">Storage Path</string>
 

@@ -47,10 +47,10 @@
     <string name="video_codec_summary">H.265 支持 HDR 且更高效</string>
     <string name="show_touches">显示屏幕触摸</string>
     <string name="show_touches_summary">手指点击的地方显示小白点 (需要 Root)</string>
-    <string name="tile_style">快捷磁贴图标样式</string>
+    <string name="tile_style">录制样式</string>
     <string name="tile_style_summary">选择快捷设置磁贴的图标样式</string>
-    <string name="tile_style_default">默认</string>
-    <string name="tile_style_app_icon">应用图标前景</string>
+    <string name="tile_style_default">录音机样式</string>
+    <string name="tile_style_app_icon">应用图标样式</string>
     <string name="section_storage">存储</string>
     <string name="storage_path">存储路径</string>
 
