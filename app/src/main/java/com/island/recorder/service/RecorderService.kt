@@ -289,10 +289,11 @@ class RecorderService : Service() {
                 val now = System.currentTimeMillis()
                 if (now - lastPauseNotificationUpdate >= 1000) {
                     lastPauseNotificationUpdate = now
+                    val bypass = currentSettings?.bypassFocusIsland ?: false
                     val notification = notificationHelper.createRecordingNotification(
-                        state.durationMs, isPaused = true, bypass = settings.bypassFocusIsland
+                        state.durationMs, isPaused = true, bypass = bypass
                     )
-                    notificationHelper.updateNotification(notification, bypass = settings.bypassFocusIsland)
+                    notificationHelper.updateNotification(notification, bypass = bypass)
                 }
                 delay(10)
                 continue
@@ -337,8 +338,9 @@ class RecorderService : Service() {
                 val currentSecond = currentDuration / 1000
                 if (currentSecond != lastNotificationUpdate) {
                     lastNotificationUpdate = currentSecond
-                    val notification = notificationHelper.createRecordingNotification(currentDuration, bypass = settings.bypassFocusIsland)
-                    notificationHelper.updateNotification(notification, bypass = settings.bypassFocusIsland)
+                    val bypass = currentSettings?.bypassFocusIsland ?: false
+                    val notification = notificationHelper.createRecordingNotification(currentDuration, bypass = bypass)
+                    notificationHelper.updateNotification(notification, bypass = bypass)
                 }
 
                 delay(10) // Small delay to prevent busy waiting
