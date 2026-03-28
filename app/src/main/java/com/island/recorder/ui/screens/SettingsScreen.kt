@@ -29,6 +29,7 @@ import com.island.recorder.utils.FileManager
 import com.island.recorder.utils.PreferencesManager
 import com.island.recorder.utils.RootUtils
 import com.island.recorder.shizuku.ShizukuHelper
+import rikka.shizuku.Shizuku
 import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.extra.SuperArrow
 import top.yukonga.miuix.kmp.extra.SuperDropdown
@@ -211,11 +212,13 @@ fun SettingsScreen(
                 }
 
                 DisposableEffect(Unit) {
-                    val listener = Shizuku.OnRequestPermissionResultListener { _, _ ->
-                        shizukuStatus = if (ShizukuHelper.hasPermission()) {
-                            "shizuku_status_authorized"
-                        } else {
-                            "shizuku_status_not_authorized"
+                    val listener = object : Shizuku.OnRequestPermissionResultListener {
+                        override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
+                            shizukuStatus = if (ShizukuHelper.hasPermission()) {
+                                "shizuku_status_authorized"
+                            } else {
+                                "shizuku_status_not_authorized"
+                            }
                         }
                     }
                     ShizukuHelper.addPermissionResultListener(listener)
