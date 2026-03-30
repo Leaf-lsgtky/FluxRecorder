@@ -247,8 +247,7 @@ fun RecordButton(
                 .scale(if (isRecording) scale else 1f),
             cornerRadius = 90.dp,
             colors = ButtonDefaults.buttonColors(
-                color = if (isRecording) RecordingRed else MiuixTheme.colorScheme.primary,
-                contentColor = Color.White
+                color = if (isRecording) RecordingRed else MiuixTheme.colorScheme.primary
             )
         ) {
             Text(
