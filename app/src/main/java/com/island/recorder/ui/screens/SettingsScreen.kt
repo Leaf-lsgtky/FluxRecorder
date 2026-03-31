@@ -328,11 +328,11 @@ fun SettingsScreen(
                             }
                         },
                         valueRange = 50f..200f,
-                        steps = 15,
+                        steps = 0,
                         keyPoints = listOf(75f, 100f, 150f),
                         showKeyPoints = currentSettings.bypassFocusIsland,
                         enabled = currentSettings.bypassFocusIsland,
-                        magnetThreshold = 0.15f,
+                        magnetThreshold = 0.2f,
                         hapticEffect = SliderDefaults.SliderHapticEffect.Step,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -346,7 +346,7 @@ fun SettingsScreen(
                             MiuixTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                         else
                             MiuixTheme.colorScheme.onBackground.copy(alpha = 0.3f),
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
                     )
                 }
 
