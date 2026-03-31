@@ -307,12 +307,11 @@ fun SettingsScreen(
                 )
 
                 // XMSF Block Duration (always visible, enabled only when bypass is active)
-                Card(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
-                        .padding(bottom = 6.dp),
-                    insideMargin = PaddingValues(0.dp)
+                        .padding(bottom = 6.dp)
                 ) {
                     SuperArrow(
                         title = stringResource(R.string.xmsf_block_duration),
