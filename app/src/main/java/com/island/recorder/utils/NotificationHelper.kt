@@ -248,7 +248,7 @@ class NotificationHelper(private val context: Context) {
         notification.extras.putBundle("miui.focus.pics", picsBundle)
     }
 
-    fun updateNotification(notification: Notification, bypass: Boolean = false) {
+    fun updateNotification(notification: Notification, bypass: Boolean = false, durationMs: Long = BLIND_WINDOW_MS) {
         if (bypass && ShizukuHelper.isAvailable() && ShizukuHelper.hasPermission()) {
             val xmsfUid = try {
                 context.packageManager.getPackageUid(XMSF_PACKAGE, 0)
@@ -264,7 +264,7 @@ class NotificationHelper(private val context: Context) {
             if (blocked) {
                 Thread {
                     try {
-                        Thread.sleep(BLIND_WINDOW_MS)
+                        Thread.sleep(durationMs)
                     } catch (_: Exception) {}
                     ShizukuHelper.setPackageNetworkingEnabled(xmsfUid, true)
                 }.start()

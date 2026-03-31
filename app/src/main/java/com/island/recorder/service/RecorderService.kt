@@ -293,7 +293,7 @@ class RecorderService : Service() {
                     val notification = notificationHelper.createRecordingNotification(
                         state.durationMs, isPaused = true, bypass = bypass
                     )
-                    notificationHelper.updateNotification(notification, bypass = bypass)
+                    notificationHelper.updateNotification(notification, bypass = bypass, durationMs = currentSettings?.xmsfBlockDurationMs ?: 100L)
                 }
                 delay(10)
                 continue
@@ -340,7 +340,7 @@ class RecorderService : Service() {
                     lastNotificationUpdate = currentSecond
                     val bypass = currentSettings?.bypassFocusIsland ?: false
                     val notification = notificationHelper.createRecordingNotification(currentDuration, bypass = bypass)
-                    notificationHelper.updateNotification(notification, bypass = bypass)
+                    notificationHelper.updateNotification(notification, bypass = bypass, durationMs = currentSettings?.xmsfBlockDurationMs ?: 100L)
                 }
 
                 delay(10) // Small delay to prevent busy waiting
@@ -440,7 +440,7 @@ class RecorderService : Service() {
             val notification = notificationHelper.createRecordingNotification(
                 currentState.durationMs, isPaused = true, bypass = currentSettings?.bypassFocusIsland ?: false
             )
-            notificationHelper.updateNotification(notification, bypass = currentSettings?.bypassFocusIsland ?: false)
+            notificationHelper.updateNotification(notification, bypass = currentSettings?.bypassFocusIsland ?: false, durationMs = currentSettings?.xmsfBlockDurationMs ?: 100L)
         }
     }
 
@@ -456,7 +456,7 @@ class RecorderService : Service() {
             _recordingState.value = RecordingState.Recording(currentState.durationMs)
 
             val notification = notificationHelper.createRecordingNotification(currentState.durationMs, bypass = currentSettings?.bypassFocusIsland ?: false)
-            notificationHelper.updateNotification(notification, bypass = currentSettings?.bypassFocusIsland ?: false)
+            notificationHelper.updateNotification(notification, bypass = currentSettings?.bypassFocusIsland ?: false, durationMs = currentSettings?.xmsfBlockDurationMs ?: 100L)
         }
     }
 

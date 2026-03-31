@@ -303,6 +303,43 @@ fun SettingsScreen(
                     }
                 )
 
+                if (currentSettings.bypassFocusIsland) {
+                    SmallTitle(text = stringResource(R.string.xmsf_block_duration))
+                    Card(
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.xmsf_block_duration_summary),
+                                    style = MiuixTheme.textStyles.caption,
+                                    color = MiuixTheme.colorScheme.onBackgroundVariant
+                                )
+                                Text(
+                                    text = "${currentSettings.xmsfBlockDurationMs}ms",
+                                    style = MiuixTheme.textStyles.body2,
+                                    color = MiuixTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Slider(
+                                value = currentSettings.xmsfBlockDurationMs.toFloat(),
+                                onValueChange = {
+                                    currentSettings = currentSettings.copy(xmsfBlockDurationMs = it.toLong())
+                                    onSettingsChanged(currentSettings)
+                                },
+                                valueRange = 50f..200f,
+                                steps = 150, // This will give us 1ms precision roughly, but keypoints are better
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
+
                 // Tile Style
                 val tileStyleItems = TileStyle.entries.map { style ->
                     SpinnerEntry(

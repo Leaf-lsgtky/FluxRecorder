@@ -109,6 +109,8 @@ data class RecordingSettings(
     val videoCodec: VideoCodec = VideoCodec.H264,
     val showTouches: Boolean = false,
     val bypassFocusIsland: Boolean = false,
+    val xmsfBlockDurationMs: Long = 100L,
+    val bypassFocusIslandV2: Boolean = false, // Not used but kept for compatibility if needed
     val tileStyle: TileStyle = TileStyle.DEFAULT
 ) : Parcelable {
     /**
