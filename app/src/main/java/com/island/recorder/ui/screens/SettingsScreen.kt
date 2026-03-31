@@ -30,7 +30,9 @@ import com.island.recorder.utils.PreferencesManager
 import com.island.recorder.utils.RootUtils
 import com.island.recorder.shizuku.ShizukuHelper
 import rikka.shizuku.Shizuku
+import androidx.compose.ui.text.font.FontWeight
 import top.yukonga.miuix.kmp.basic.*
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.extra.SuperArrow
 import top.yukonga.miuix.kmp.extra.SuperDropdown
 import top.yukonga.miuix.kmp.extra.SuperSpinner
@@ -333,7 +335,8 @@ fun SettingsScreen(
                                     onSettingsChanged(currentSettings)
                                 },
                                 valueRange = 50f..200f,
-                                steps = 150, // This will give us 1ms precision roughly, but keypoints are better
+                                steps = 150,
+                                keyPoints = listOf(75f, 100f, 150f),
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
