@@ -37,9 +37,6 @@ import top.yukonga.miuix.kmp.extra.SuperArrow
 import top.yukonga.miuix.kmp.extra.SuperDropdown
 import top.yukonga.miuix.kmp.extra.SuperSpinner
 import top.yukonga.miuix.kmp.extra.SuperSwitch
-import top.yukonga.miuix.kmp.extra.BasicComponent
-import top.yukonga.miuix.kmp.extra.BasicComponentColors
-import top.yukonga.miuix.kmp.extra.BasicComponentDefaults
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.utils.overScrollVertical
@@ -309,49 +306,58 @@ fun SettingsScreen(
                 )
 
                 // XMSF Block Duration (always visible, enabled only when bypass is active)
-                BasicComponent(
-                    title = stringResource(R.string.xmsf_block_duration),
-                    summary = "${currentSettings.xmsfBlockDurationMs}ms",
-                    enabled = currentSettings.bypassFocusIsland,
-                    titleColor = BasicComponentColors(
-                        color = MiuixTheme.colorScheme.onSurface,
-                        disabledColor = MiuixTheme.colorScheme.onSurfaceVariant
-                    ),
-                    summaryColor = BasicComponentColors(
-                        color = MiuixTheme.colorScheme.primary,
-                        disabledColor = MiuixTheme.colorScheme.onSurfaceVariant
-                    ),
-                    content = {
-                        Column(
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                Card(
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = stringResource(R.string.xmsf_block_duration_summary),
-                                style = MiuixTheme.textStyles.body2,
+                                text = stringResource(R.string.xmsf_block_duration),
+                                style = MiuixTheme.textStyles.title,
                                 color = if (currentSettings.bypassFocusIsland)
-                                    MiuixTheme.colorScheme.onSurfaceVariant
+                                    MiuixTheme.colorScheme.onSurface
                                 else
-                                    MiuixTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                    MiuixTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Slider(
-                                value = currentSettings.xmsfBlockDurationMs.toFloat(),
-                                onValueChange = {
-                                    if (currentSettings.bypassFocusIsland) {
-                                        currentSettings = currentSettings.copy(xmsfBlockDurationMs = it.toLong())
-                                        onSettingsChanged(currentSettings)
-                                    }
-                                },
-                                valueRange = 50f..200f,
-                                steps = 150,
-                                keyPoints = listOf(75f, 100f, 150f),
-                                showKeyPoints = currentSettings.bypassFocusIsland,
-                                enabled = currentSettings.bypassFocusIsland,
-                                modifier = Modifier.fillMaxWidth()
+                            Text(
+                                text = "${currentSettings.xmsfBlockDurationMs}ms",
+                                style = MiuixTheme.textStyles.title,
+                                color = if (currentSettings.bypassFocusIsland)
+                                    MiuixTheme.colorScheme.primary
+                                else
+                                    MiuixTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                             )
                         }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = stringResource(R.string.xmsf_block_duration_summary),
+                            style = MiuixTheme.textStyles.body2,
+                            color = if (currentSettings.bypassFocusIsland)
+                                MiuixTheme.colorScheme.onSurfaceVariant
+                            else
+                                MiuixTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Slider(
+                            value = currentSettings.xmsfBlockDurationMs.toFloat(),
+                            onValueChange = {
+                                if (currentSettings.bypassFocusIsland) {
+                                    currentSettings = currentSettings.copy(xmsfBlockDurationMs = it.toLong())
+                                    onSettingsChanged(currentSettings)
+                                }
+                            },
+                            valueRange = 50f..200f,
+                            steps = 150,
+                            keyPoints = listOf(75f, 100f, 150f),
+                            showKeyPoints = currentSettings.bypassFocusIsland,
+                            enabled = currentSettings.bypassFocusIsland,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
-                )
+                }
 
                 // Tile Style
                 val tileStyleItems = TileStyle.entries.map { style ->
